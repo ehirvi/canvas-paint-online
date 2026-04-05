@@ -1,2 +1,5 @@
-run-server:
-	go -C ./packages/server run ./cmd/server
+server:
+	cd ./packages/server && go run ./cmd/server
+
+client:
+	cd ./packages/client && npm run dev
