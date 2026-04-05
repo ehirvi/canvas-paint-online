@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"online-canvas-paint-server/internal/server"
+)
 
 func main() {
-	fmt.Println("Hello world!")
+	server.InitializeServer()
 }
