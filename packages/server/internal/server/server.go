@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"online-canvas-paint-server/internal/routes"
+	"online-canvas-paint-server/internal/session"
 	"online-canvas-paint-server/internal/transport"
 
 	"github.com/quic-go/quic-go/http3"
@@ -23,11 +24,13 @@ func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
 	return wtServer
 }
 
-func createHttpRoutes(mux *http.ServeMux) {
+func createHttpRoutes(manager *session.Manager, mux *http.ServeMux) {
 	routes := routes.GetRoutes()
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
-		mux.HandleFunc(pattern, route.Handler)
+		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+			route.Handler(*manager, w, r)
+		})
 	}
 }
 
@@ -48,16 +51,17 @@ func serveWebTransportServer(server *webtransport.Server, certFile string, keyFi
 	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
 }
 
-func InitializeServer() {
+func InitializeServer(manager *session.Manager) {
 	certFile := "localhost.pem"
 	keyFile := "localhost-key.pem"
 
 	h3Server, mux := createHttp3Server()
 	wtServer := createWebTransportServer(h3Server)
-	createHttpRoutes(mux)
+
+	createHttpRoutes(manager, mux)
 	createWebTransportRoute(wtServer, mux)
 
-	fmt.Printf("Server running on %s", h3Server.Addr)
+	fmt.Printf("\nServer running on %s\n\n", h3Server.Addr)
 	serveHttpFallbackServer(h3Server, certFile, keyFile)
 	serveWebTransportServer(wtServer, certFile, keyFile)
 }
