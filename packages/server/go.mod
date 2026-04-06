@@ -3,6 +3,7 @@ module online-canvas-paint-server
 go 1.25.6
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/quic-go/quic-go v0.59.0
 	github.com/quic-go/webtransport-go v0.10.0
 )
