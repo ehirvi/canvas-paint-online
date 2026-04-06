@@ -2,8 +2,13 @@ package main
 
 import (
 	"online-canvas-paint-server/internal/server"
+	"online-canvas-paint-server/internal/session"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	server.InitializeServer()
+	godotenv.Load()
+	manager := session.NewManager()
+	server.InitializeServer(manager)
 }
