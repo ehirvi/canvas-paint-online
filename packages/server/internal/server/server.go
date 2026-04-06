@@ -19,7 +19,7 @@ func createHttp3Server() (*http3.Server, *http.ServeMux) {
 }
 
 func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
-	wtServer := &webtransport.Server{H3: h3Server}
+	wtServer := &webtransport.Server{H3: h3Server, CheckOrigin: func(r *http.Request) bool { return true }}
 	webtransport.ConfigureHTTP3Server(h3Server)
 	return wtServer
 }
@@ -29,6 +29,7 @@ func createHttpRoutes(manager *session.Manager, mux *http.ServeMux) {
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+			CorsHandler(w, r)
 			route.Handler(*manager, w, r)
 		})
 	}
