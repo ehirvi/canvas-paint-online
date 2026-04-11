@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,13 +15,13 @@ import (
 
 func createHttp3Server() (*http3.Server, *http.ServeMux) {
 	mux := http.NewServeMux()
-	server := &http3.Server{Handler: mux, Addr: ":8443"}
+	server := &http3.Server{Handler: mux, Addr: ":8443", TLSConfig: http3.ConfigureTLSConfig(&tls.Config{})}
 	return server, mux
 }
 
 func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
-	wtServer := &webtransport.Server{H3: h3Server, CheckOrigin: func(r *http.Request) bool { return true }}
 	webtransport.ConfigureHTTP3Server(h3Server)
+	wtServer := &webtransport.Server{H3: h3Server, CheckOrigin: func(r *http.Request) bool { return true }}
 	return wtServer
 }
 
@@ -36,7 +37,7 @@ func createHttpRoutes(manager *session.Manager, mux *http.ServeMux) {
 }
 
 func createWebTransportRoute(wtServer *webtransport.Server, mux *http.ServeMux) {
-	pattern := "CONNECT /session/wt"
+	pattern := fmt.Sprintf("%s /session/wt", http.MethodConnect)
 	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		transport.UpgradeToWebTransportSession(wtServer, w, r)
 	})
