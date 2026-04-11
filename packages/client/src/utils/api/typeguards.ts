@@ -4,7 +4,7 @@ const isObject = (data: unknown): data is object =>
   typeof data === "object" && data !== null;
 
 const isString = (data: unknown): data is string =>
-  typeof data === "string" && data.length > 0;
+  typeof data === "string" && data.trim().length > 0;
 
 export const isSessionCreateResponse = (
   data: unknown,
