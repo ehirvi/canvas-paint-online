@@ -1,7 +1,7 @@
 package transport
 
 import (
-"fmt"
+	"fmt"
 	"log"
 	"net/http"
 	"online-canvas-paint-server/internal/message"
@@ -22,9 +22,28 @@ func parseMessage(manager *session.Manager, session *webtransport.Session, msg *
 			fmt.Printf("uuid err: %s\n", err)
 		}
 		manager.AddWebTransportSessionToUser(sessionId, userId, session)
+		resPayload := constructAuthSuccessMsg(true)
+		return resPayload
 
 	}
 	return message.Message{}
+}
+
+func constructAuthSuccessMsg(success bool) message.Message {
+	var payload byte
+	if success {
+		payload = 1
+	} else {
+		payload = 0
+	}
+
+	msg := message.Message{Type: message.AuthenticateSuccess, Payload: []byte{payload}}
+	return msg
+}
+
+func sendStreamMessage(stream *webtransport.Stream, payload message.Message) {
+	encodedPayload := message.EncodeMessage(payload)
+	stream.Write(encodedPayload)
 }
 
 func readStreamMessage(stream *webtransport.Stream) (*message.Message, error) {
@@ -38,6 +57,7 @@ func handleStream(manager *session.Manager, session *webtransport.Session, strea
 	for {
 		msg, _ := readStreamMessage(stream)
 		resPayload := parseMessage(manager, session, msg)
+		sendStreamMessage(stream, resPayload)
 	}
 }
 
