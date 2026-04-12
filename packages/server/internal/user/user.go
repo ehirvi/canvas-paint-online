@@ -17,10 +17,10 @@ const (
 type User struct {
 	ID      common.ID
 	Role    Role
-	Session webtransport.Session
+	Session *webtransport.Session
 }
 
 func CreateUser(role Role) *User {
 	id, _ := uuid.NewRandom()
-	return &User{ID: id, Role: role}
+	return &User{ID: id, Role: role, Session: &webtransport.Session{}}
 }
