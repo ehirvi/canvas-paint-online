@@ -36,10 +36,10 @@ func createHttpRoutes(manager *session.Manager, mux *http.ServeMux) {
 	}
 }
 
-func createWebTransportRoute(wtServer *webtransport.Server, mux *http.ServeMux) {
+func createWebTransportRoute(manager *session.Manager, wtServer *webtransport.Server, mux *http.ServeMux) {
 	pattern := fmt.Sprintf("%s /session/wt", http.MethodConnect)
 	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		transport.UpgradeToWebTransportSession(wtServer, w, r)
+		transport.UpgradeToWebTransportSession(manager, wtServer, w, r)
 	})
 }
 
@@ -61,7 +61,7 @@ func InitializeServer(manager *session.Manager) {
 	wtServer := createWebTransportServer(h3Server)
 
 	createHttpRoutes(manager, mux)
-	createWebTransportRoute(wtServer, mux)
+	createWebTransportRoute(manager, wtServer, mux)
 
 	fmt.Printf("\nServer running on %s\n\n", h3Server.Addr)
 	serveHttpFallbackServer(h3Server, certFile, keyFile)

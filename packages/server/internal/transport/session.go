@@ -6,8 +6,11 @@ import (
 
 	"github.com/quic-go/webtransport-go"
 )
+func handleStream(manager *session.Manager, session *webtransport.Session, stream *webtransport.Stream) {
+	defer stream.Close()
+}
 
-func UpgradeToWebTransportSession(wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
+func UpgradeToWebTransportSession(manager *session.Manager, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
 	sess, err := wtServer.Upgrade(w, r)
 	if err != nil {
 		log.Printf("upgrading failed: %s", err)
@@ -20,6 +23,7 @@ func UpgradeToWebTransportSession(wtServer *webtransport.Server, w http.Response
 		if err != nil {
 			return
 		}
-		stream.Write([]byte("ping"))
+
+		handleStream(manager, sess, stream)
 	}()
 }
