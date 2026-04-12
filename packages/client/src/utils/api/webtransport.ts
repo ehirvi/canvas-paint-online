@@ -1,7 +1,11 @@
 import { appConfig } from "../config";
 import {
   decodeProtocolMessage,
+  EMessageType,
+  encodeProtocolMessage,
+  encodeStringToBytes,
   isValidMessageType,
+  type IMessage,
 } from "../protocol";
 import { EApiEndpoint } from "./endpoints";
 
@@ -56,4 +60,18 @@ export const writeToStream = async (
 ) => {
   const writer = writable.getWriter();
   writer.write(payload);
+};
+
+export const authenticateUser = (
+  writable: WritableStream,
+  accessToken: string,
+) => {
+  const tokenBytes = encodeStringToBytes(accessToken);
+  const payload: IMessage = {
+    length: 1 + tokenBytes.length,
+    type: EMessageType.USER_AUTHENTICATE,
+    message: tokenBytes,
+  };
+  const protocolMessage = encodeProtocolMessage(payload);
+  writeToStream(writable, protocolMessage);
 };

@@ -3,14 +3,20 @@ import { Button } from "../../components/Button";
 import { Heading } from "../../components/Heading";
 import { createSession } from "../../utils/api/session";
 import { useState } from "react";
+import { useWebTransport } from "../../hooks/useWebTransport";
+import type { ISessionCreateResponse } from "../../utils/api/types";
 
 export const Home = () => {
-  const [sessionId, setSessionId] = useState("");
+  const [sessionSettings, setSessionSettings] = useState<
+    ISessionCreateResponse | undefined
+  >(undefined);
+
+  const { isAuthenticated } = useWebTransport(sessionSettings?.accessToken);
 
   const onCreate = async () => {
     const session = await createSession();
     if (session) {
-      setSessionId(session.sessionId);
+      setSessionSettings(session);
     }
   };
 
@@ -21,7 +27,8 @@ export const Home = () => {
         <Button onClick={onCreate}>Create a new paint session</Button>
         <Button>Join a paint session</Button>
       </Stack>
-      <p>{sessionId}</p>
+      <p>{sessionSettings?.sessionId}</p>
+      <p>is authenticated {String(isAuthenticated)}</p>
     </Stack>
   );
 };
