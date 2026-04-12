@@ -1,3 +1,4 @@
+import { appConfig } from "../config";
 import { EApiEndpoint } from "./endpoints";
 import { isSessionCreateResponse } from "./typeguards";
 import type { ISessionCreateResponse } from "./types";
@@ -21,7 +22,7 @@ const serverPost = ({
 export const createSession = async (): Promise<
   ISessionCreateResponse | undefined
 > => {
-  const url = `https://localhost:8443${EApiEndpoint.SESSION_CREATE}`;
+  const url = appConfig.API_URL + EApiEndpoint.SESSION_CREATE;
   const res = await serverPost({ url });
   const body = await res.json();
 
