@@ -20,6 +20,10 @@ export interface IMessage {
   message: Uint8Array;
 }
 
+export const isValidMessageType = (type: number) => {
+  return Object.values(EMessageType).includes(type as EMessageType);
+};
+
 export const encodeStringToBytes = (
   message: string,
 ): Uint8Array<ArrayBuffer> => {
