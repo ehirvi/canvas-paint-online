@@ -1,6 +1,11 @@
 import styled, { keyframes } from "styled-components";
 import { Stack } from "../../components/Stack";
 import { useEffect, useRef } from "react";
+import { useParams } from "react-router";
+import { getAccessToken, setAccessToken } from "../../utils/storage";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { joinSession } from "../../utils/api/session";
+import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 960;
@@ -34,7 +39,7 @@ const StyledCanvas = styled.canvas`
   border-radius: 0.5rem;
 `;
 
-export const Canvas = () => {
+const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
@@ -104,4 +109,34 @@ export const Canvas = () => {
       </AnimatedRoot>
     </Stack>
   );
+};
+
+export const CanvasWrapper = () => {
+  const { sessionId } = useParams();
+  const accessToken = getAccessToken();
+  const { isAuthenticated, initWebTransport } = useWebTransportContext();
+
+  useEffect(() => {
+    const onJoin = async () => {
+      const hasAccessToken = !!accessToken;
+
+      if (hasAccessToken) {
+        return;
+      }
+
+      const session = await joinSession(sessionId!);
+      if (session) {
+        setAccessToken(session.accessToken);
+        initWebTransport(session.accessToken);
+      }
+    };
+
+    onJoin();
+  }, []);
+
+  if (!isAuthenticated) {
+    return <LoadingIndicator />;
+  }
+
+  return <Canvas />;
 };

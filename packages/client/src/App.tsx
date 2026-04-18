@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Home } from "./views/Home";
-import { Canvas } from "./views/Canvas";
+import { CanvasWrapper } from "./views/Canvas";
 import { EAppRoutes } from "./utils/routes";
 import { WebTransportProvider } from "./provider";
 
@@ -10,7 +10,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route index element={<Home />} />
-          <Route path={EAppRoutes.CANVAS} element={<Canvas />} />
+          <Route path={EAppRoutes.CANVAS} element={<CanvasWrapper />} />
         </Routes>
       </BrowserRouter>
     </WebTransportProvider>
