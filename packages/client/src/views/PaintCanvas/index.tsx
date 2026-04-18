@@ -36,13 +36,59 @@ const StyledCanvas = styled.canvas`
 
 export const PaintCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D>(null);
+  const isMousePressedDown = useRef(false);
+
+  const getMousePosition = (ev: MouseEvent): [number, number] => {
+    const ctx = canvasRef.current as HTMLCanvasElement;
+    const rect = ctx.getBoundingClientRect();
+    const posX = ev.clientX - rect.left;
+    const posY = ev.clientY - rect.top;
+    return [posX, posY];
+  };
+
+  const onMouseMove = (pos: [number, number]) => {
+    if (isMousePressedDown.current) {
+      const ctx = ctxRef.current as CanvasRenderingContext2D;
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 5;
+      ctx.lineTo(pos[0], pos[1]);
+      ctx.stroke();
+    }
+  };
+
+  const onMouseDown = (pos: [number, number]) => {
+    isMousePressedDown.current = true;
+    const ctx = ctxRef.current as CanvasRenderingContext2D;
+    ctx.beginPath();
+    ctx.moveTo(pos[0], pos[1]);
+  };
+
+  const onMouseUp = (pos: [number, number]) => {
+    onMouseMove(pos);
+    isMousePressedDown.current = false;
+  };
+
+  const createEventListeners = (canvas: HTMLCanvasElement) => {
+    canvas.addEventListener("mousemove", (ev) =>
+      onMouseMove(getMousePosition(ev)),
+    );
+    canvas.addEventListener("mousedown", (ev) =>
+      onMouseDown(getMousePosition(ev)),
+    );
+    canvas.addEventListener("mouseup", (ev) => onMouseUp(getMousePosition(ev)));
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
+
     if (canvas) {
-      const ctx = canvas.getContext("2d")!;
+      ctxRef.current = canvas.getContext("2d");
+      const ctx = ctxRef.current as CanvasRenderingContext2D;
       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      createEventListeners(canvas);
     }
   }, []);
 
