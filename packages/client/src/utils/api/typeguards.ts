@@ -1,4 +1,4 @@
-import type { ISessionCreateResponse } from "./types";
+import type { ISessionCreateResponse, ISessionJoinResponse } from "./types";
 
 const isObject = (data: unknown): data is object =>
   typeof data === "object" && data !== null;
@@ -16,4 +16,10 @@ export const isSessionCreateResponse = (
     "accessToken" in data &&
     isString(data.accessToken)
   );
+};
+
+export const isSessionJoinResponse = (
+  data: unknown,
+): data is ISessionJoinResponse => {
+  return isObject(data) && "accessToken" in data && isString(data.accessToken);
 };

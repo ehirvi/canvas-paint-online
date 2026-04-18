@@ -1,5 +1,6 @@
 export const EApiEndpoint = {
   SESSION_CREATE: "/session/create",
+  SESSION_JOIN: "/session/:sessionId/join",
   WEBTRANSPORT: "/session/wt",
 } as const;
 

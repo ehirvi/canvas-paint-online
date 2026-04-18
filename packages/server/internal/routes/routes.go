@@ -18,7 +18,7 @@ type Route struct {
 	Handler func(session.Manager, http.ResponseWriter, *http.Request)
 }
 
-var routes = []Route{Health, SessionCreate}
+var routes = []Route{Health, SessionCreate, SessionJoin}
 
 func GetRoutes() []Route {
 	return routes
