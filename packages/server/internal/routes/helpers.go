@@ -10,3 +10,7 @@ func SendJsonResponse(w http.ResponseWriter, body any, statusCode int) {
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(body)
 }
+
+func SendErrorResponse(w http.ResponseWriter, errorMessage string, statusCode int) {
+	http.Error(w, errorMessage, statusCode)
+}
