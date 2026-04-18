@@ -25,10 +25,9 @@ export const setupWebTransportStream = async (
 };
 
 export const readFromStream = async (
-  readable: ReadableStream,
+  reader: ReadableStreamDefaultReader,
   messageHandler: (type: number, payload: Uint8Array<ArrayBuffer>) => void,
 ) => {
-  const reader = readable.getReader();
   let buffer = new Uint8Array(0);
   try {
     while (true) {
@@ -55,15 +54,14 @@ export const readFromStream = async (
 };
 
 export const writeToStream = async (
-  writable: WritableStream,
+  writer: WritableStreamDefaultWriter,
   payload: Uint8Array<ArrayBuffer>,
 ) => {
-  const writer = writable.getWriter();
   writer.write(payload);
 };
 
 export const authenticateUser = (
-  writable: WritableStream,
+  writer: WritableStreamDefaultWriter,
   accessToken: string,
 ) => {
   const tokenBytes = encodeStringToBytes(accessToken);
@@ -73,5 +71,5 @@ export const authenticateUser = (
     message: tokenBytes,
   };
   const protocolMessage = encodeProtocolMessage(payload);
-  writeToStream(writable, protocolMessage);
+  writeToStream(writer, protocolMessage);
 };

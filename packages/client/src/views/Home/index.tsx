@@ -3,12 +3,12 @@ import { Button } from "../../components/Button";
 import { Heading } from "../../components/Heading";
 import { createSession } from "../../utils/api/session";
 import { useEffect, useState } from "react";
-import { useWebTransport } from "../../hooks/useWebTransport";
 import type { ISessionCreateResponse } from "../../utils/api/types";
 import { useNavigate } from "react-router";
 import { constructCanvasRoute } from "../../utils/routes";
 import { setAccessToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -17,7 +17,14 @@ export const Home = () => {
     ISessionCreateResponse | undefined
   >(undefined);
 
-  const { isAuthenticated } = useWebTransport(sessionSettings?.accessToken);
+  const { isAuthenticated, initWebTransport } = useWebTransportContext();
+
+  useEffect(() => {
+    const token = sessionSettings?.accessToken;
+    if (token) {
+      initWebTransport(token);
+    }
+  }, [sessionSettings]);
 
   useEffect(() => {
     if (isAuthenticated) {
