@@ -13,22 +13,14 @@ import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 export const Home = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [sessionSettings, setSessionSettings] = useState<
-    ISessionCreateResponse | undefined
-  >(undefined);
+  const [sessionId, setSessionId] =
+    useState<ISessionCreateResponse["sessionId"]>("");
 
   const { isAuthenticated, initWebTransport } = useWebTransportContext();
 
   useEffect(() => {
-    const token = sessionSettings?.accessToken;
-    if (token) {
-      initWebTransport(token);
-    }
-  }, [sessionSettings]);
-
-  useEffect(() => {
     if (isAuthenticated) {
-      navigate(constructCanvasRoute(sessionSettings!.sessionId));
+      navigate(constructCanvasRoute(sessionId));
     }
   }, [isAuthenticated]);
 
@@ -37,7 +29,8 @@ export const Home = () => {
     const session = await createSession();
     if (session) {
       setAccessToken(session.accessToken);
-      setSessionSettings(session);
+      initWebTransport(session.accessToken);
+      setSessionId(session.sessionId);
     }
   };
 
