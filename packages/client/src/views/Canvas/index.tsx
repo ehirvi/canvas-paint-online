@@ -34,7 +34,7 @@ const StyledCanvas = styled.canvas`
   border-radius: 0.5rem;
 `;
 
-export const PaintCanvas = () => {
+export const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);

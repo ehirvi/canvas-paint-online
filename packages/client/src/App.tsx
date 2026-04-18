@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Home } from "./views/Home";
-import { PaintCanvas } from "./views/PaintCanvas";
+import { Canvas } from "./views/Canvas";
 import { EAppRoutes } from "./utils/routes";
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route index element={<Home />} />
-        <Route path={EAppRoutes.PAINT_CANVAS} element={<PaintCanvas />} />
+        <Route path={EAppRoutes.CANVAS} element={<Canvas />} />
       </Routes>
     </BrowserRouter>
   );

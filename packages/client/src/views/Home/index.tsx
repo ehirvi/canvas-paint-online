@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useWebTransport } from "../../hooks/useWebTransport";
 import type { ISessionCreateResponse } from "../../utils/api/types";
 import { useNavigate } from "react-router";
-import { constructPaintCanvasRoute } from "../../utils/routes";
+import { constructCanvasRoute } from "../../utils/routes";
 import { setAccessToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 
@@ -21,7 +21,7 @@ export const Home = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(constructPaintCanvasRoute(sessionSettings!.sessionId));
+      navigate(constructCanvasRoute(sessionSettings!.sessionId));
     }
   }, [isAuthenticated]);
 
