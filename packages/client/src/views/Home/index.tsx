@@ -8,9 +8,11 @@ import type { ISessionCreateResponse } from "../../utils/api/types";
 import { useNavigate } from "react-router";
 import { constructPaintCanvasRoute } from "../../utils/routes";
 import { setAccessToken } from "../../utils/storage";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
 
 export const Home = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [sessionSettings, setSessionSettings] = useState<
     ISessionCreateResponse | undefined
   >(undefined);
@@ -24,12 +26,17 @@ export const Home = () => {
   }, [isAuthenticated]);
 
   const onCreate = async () => {
+    setLoading(true);
     const session = await createSession();
     if (session) {
-setAccessToken(session.accessToken);
+      setAccessToken(session.accessToken);
       setSessionSettings(session);
     }
   };
+
+  if (loading) {
+    return <LoadingIndicator />;
+  }
 
   return (
     <Stack vertical gap={2}>
