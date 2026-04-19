@@ -2,6 +2,7 @@ import { appConfig } from "../config";
 import {
   decodeProtocolMessage,
   EMessageType,
+  encodePositionToBytes,
   encodeProtocolMessage,
   encodeStringToBytes,
   isValidMessageType,
@@ -26,7 +27,10 @@ export const setupWebTransportStream = async (
 
 export const readFromStream = async (
   reader: ReadableStreamDefaultReader,
-  messageHandler: (type: number, payload: Uint8Array<ArrayBuffer>) => void,
+  messageHandler: (
+    type: EMessageType,
+    payload: Uint8Array<ArrayBuffer>,
+  ) => void,
 ) => {
   let buffer = new Uint8Array(0);
   try {
@@ -69,6 +73,20 @@ export const authenticateUser = (
     length: 1 + tokenBytes.length,
     type: EMessageType.USER_AUTHENTICATE,
     message: tokenBytes,
+  };
+  const protocolMessage = encodeProtocolMessage(payload);
+  writeToStream(writer, protocolMessage);
+};
+
+export const updateUserStrokePosition = (
+  writer: WritableStreamDefaultWriter,
+  segment: [number, number, number, number],
+) => {
+  const positionBytes = encodePositionToBytes(segment);
+  const payload: IMessage = {
+    length: 1 + positionBytes.length,
+    type: EMessageType.STROKE_POSITION,
+    message: positionBytes,
   };
   const protocolMessage = encodeProtocolMessage(payload);
   writeToStream(writer, protocolMessage);

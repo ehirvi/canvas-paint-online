@@ -1,6 +1,7 @@
 export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
+  STROKE_POSITION: 0x03,
 } as const;
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
@@ -20,7 +21,7 @@ export interface IMessage {
   message: Uint8Array;
 }
 
-export const isValidMessageType = (type: number) => {
+export const isValidMessageType = (type: number): type is EMessageType => {
   return Object.values(EMessageType).includes(type as EMessageType);
 };
 
@@ -30,6 +31,34 @@ export const encodeStringToBytes = (
   const encoder = new TextEncoder();
   const bytes = encoder.encode(message);
   return bytes;
+};
+
+export const encodePositionToBytes = (
+  segment: [number, number, number, number],
+): Uint8Array<ArrayBuffer> => {
+  const buffer = new ArrayBuffer(16);
+  const view = new DataView(buffer);
+
+  view.setUint32(0, segment[0]);
+  view.setUint32(4, segment[1]);
+  view.setUint32(8, segment[2]);
+  view.setUint32(12, segment[3]);
+
+  const bytes = new Uint8Array(buffer);
+  return bytes;
+};
+
+export const decodePositionBytes = (
+  bytes: Uint8Array<ArrayBuffer>,
+): [number, number, number, number] => {
+  const view = new DataView(bytes.buffer);
+
+  const lastPosX = view.getUint32(0);
+  const lastPosY = view.getUint32(4);
+  const posX = view.getUint32(8);
+  const posY = view.getUint32(12);
+
+  return [lastPosX, lastPosY, posX, posY];
 };
 
 export const encodeProtocolMessage = (
