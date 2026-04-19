@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"online-canvas-paint-server/internal/context"
 	"online-canvas-paint-server/internal/routes"
-	"online-canvas-paint-server/internal/session"
 	"online-canvas-paint-server/internal/transport"
 
 	"github.com/quic-go/quic-go/http3"
@@ -25,21 +25,21 @@ func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
 	return wtServer
 }
 
-func createHttpRoutes(manager *session.Manager, mux *http.ServeMux) {
+func createHttpRoutes(context *context.ApplicationContext, mux *http.ServeMux) {
 	routes := routes.GetRoutes()
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			CorsHandler(w, r)
-			route.Handler(*manager, w, r)
+			route.Handler(context, w, r)
 		})
 	}
 }
 
-func createWebTransportRoute(manager *session.Manager, wtServer *webtransport.Server, mux *http.ServeMux) {
+func createWebTransportRoute(context *context.ApplicationContext, wtServer *webtransport.Server, mux *http.ServeMux) {
 	pattern := fmt.Sprintf("%s /session/wt", http.MethodConnect)
 	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		transport.UpgradeToWebTransportSession(manager, wtServer, w, r)
+		transport.UpgradeToWebTransportSession(context, wtServer, w, r)
 	})
 }
 
@@ -53,15 +53,15 @@ func serveWebTransportServer(server *webtransport.Server, certFile string, keyFi
 	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
 }
 
-func InitializeServer(manager *session.Manager) {
+func InitializeServer(context *context.ApplicationContext) {
 	certFile := "localhost.pem"
 	keyFile := "localhost-key.pem"
 
 	h3Server, mux := createHttp3Server()
 	wtServer := createWebTransportServer(h3Server)
 
-	createHttpRoutes(manager, mux)
-	createWebTransportRoute(manager, wtServer, mux)
+	createHttpRoutes(context, mux)
+	createWebTransportRoute(context, wtServer, mux)
 
 	fmt.Printf("\nServer running on %s\n\n", h3Server.Addr)
 	serveHttpFallbackServer(h3Server, certFile, keyFile)

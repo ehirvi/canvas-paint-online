@@ -20,7 +20,17 @@ type User struct {
 	Session *webtransport.Session
 }
 
-func CreateUser(role Role) *User {
+type Manager struct {
+	users map[common.ID]*User
+}
+
+func NewManager() *Manager {
+	return &Manager{users: make(map[common.ID]*User)}
+}
+
+func (m *Manager) CreateUser(role Role) *User {
 	id, _ := uuid.NewRandom()
-	return &User{ID: id, Role: role, Session: &webtransport.Session{}}
+	user := &User{ID: id, Role: role, Session: &webtransport.Session{}}
+	m.users[id] = user
+	return user
 }
