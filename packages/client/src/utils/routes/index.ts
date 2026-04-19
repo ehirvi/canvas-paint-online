@@ -1,5 +1,5 @@
 export const EAppRoutes = {
-  CANVAS: "canvas/:sessionId",
+  CANVAS: "/canvas/:sessionId",
 } as const;
 
 export type EAppRoutes = (typeof EAppRoutes)[keyof typeof EAppRoutes];
