@@ -43,6 +43,8 @@ const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
+  const lastPosRef = useRef<[number, number]>(null);
+  const { sendStrokeUpdate, getPositionBuffer } = useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const ctx = canvasRef.current as HTMLCanvasElement;
@@ -54,11 +56,20 @@ const Canvas = () => {
 
   const onMouseMove = (pos: [number, number]) => {
     if (isMousePressedDown.current) {
-      const ctx = ctxRef.current as CanvasRenderingContext2D;
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 5;
-      ctx.lineTo(pos[0], pos[1]);
-      ctx.stroke();
+      const lastPos = lastPosRef.current;
+      if (lastPos) {
+        const ctx = ctxRef.current as CanvasRenderingContext2D;
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(lastPos[0], lastPos[1]);
+        ctx.lineTo(pos[0], pos[1]);
+        ctx.stroke();
+        sendStrokeUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+        lastPosRef.current = pos;
+      }
     }
   };
 
@@ -67,11 +78,13 @@ const Canvas = () => {
     const ctx = ctxRef.current as CanvasRenderingContext2D;
     ctx.beginPath();
     ctx.moveTo(pos[0], pos[1]);
+    lastPosRef.current = pos;
   };
 
   const onMouseUp = (pos: [number, number]) => {
     onMouseMove(pos);
     isMousePressedDown.current = false;
+    lastPosRef.current = null;
   };
 
   const createEventListeners = (canvas: HTMLCanvasElement) => {
@@ -84,8 +97,30 @@ const Canvas = () => {
     canvas.addEventListener("mouseup", (ev) => onMouseUp(getMousePosition(ev)));
   };
 
+  const paintPeerStroke = () => {
+    const buffer = getPositionBuffer();
+    const ctx = ctxRef.current as CanvasRenderingContext2D;
+    while (buffer.length > 0) {
+      const pos = buffer.shift();
+      if (!pos) {
+        return;
+      }
+
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(pos[0], pos[1]);
+      ctx.lineTo(pos[2], pos[3]);
+      ctx.stroke();
+    }
+    requestAnimationFrame(paintPeerStroke);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
+    let frameId: number;
 
     if (canvas) {
       ctxRef.current = canvas.getContext("2d");
@@ -95,6 +130,12 @@ const Canvas = () => {
 
       createEventListeners(canvas);
     }
+
+    frameId = requestAnimationFrame(paintPeerStroke);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
   }, []);
 
   return (
