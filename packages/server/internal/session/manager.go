@@ -32,7 +32,8 @@ func (m *Manager) JoinSession(sessionId common.ID, user *user.User) {
 	sess.Users[user.ID] = user
 }
 
-func (m *Manager) AddWebTransportSessionToUser(sessionId common.ID, userId common.ID, wtSession *webtransport.Session) {
+func (m *Manager) AddWebTransportSessionToUser(sessionId common.ID, userId common.ID, wtSession *webtransport.Session, wtStream *webtransport.Stream) {
 	sess := m.GetSession(sessionId)
 	sess.Users[userId].Session = wtSession
+	sess.Users[userId].Stream = wtStream
 }
