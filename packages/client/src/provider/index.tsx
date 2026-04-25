@@ -8,14 +8,16 @@ import {
   updateUserStrokePosition,
 } from "../utils/api/webtransport";
 
+export type TStrokePositionSegment = [number, number, number, number];
+
 export interface IWebTransportContext {
   connection: WebTransport | null;
   bidirStream: WebTransportBidirectionalStream | null;
   isAuthenticated: boolean;
   initWebTransport: (accessToken: string) => void;
-  sendPositionUpdate: (segment: [number, number, number, number]) => void;
-  getDrawQueue: () => Array<[number, number, number, number]>;
-  pushToDrawQueue: (segment: [number, number, number, number]) => void;
+  sendPositionUpdate: (segment: TStrokePositionSegment) => void;
+  getDrawQueue: () => Array<TStrokePositionSegment>;
+  pushToDrawQueue: (segment: TStrokePositionSegment) => void;
 }
 
 export const WebTransportContext = createContext<IWebTransportContext | null>(
@@ -31,7 +33,7 @@ export const WebTransportProvider = ({
   const streamRef = useRef<WebTransportBidirectionalStream>(null);
   const writerRef = useRef<WritableStreamDefaultWriter>(null);
   const readerRef = useRef<ReadableStreamDefaultReader>(null);
-  const drawQueueRef = useRef<Array<[number, number, number, number]>>([]);
+  const drawQueueRef = useRef<Array<TStrokePositionSegment>>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
@@ -58,7 +60,7 @@ export const WebTransportProvider = ({
     }
   };
 
-  const sendPositionUpdate = (segment: [number, number, number, number]) => {
+  const sendPositionUpdate = (segment: TStrokePositionSegment) => {
     updateUserStrokePosition(writerRef.current!, segment);
   };
 
@@ -68,7 +70,7 @@ export const WebTransportProvider = ({
     return queue;
   };
 
-  const pushToDrawQueue = (segment: [number, number, number, number]) => {
+  const pushToDrawQueue = (segment: TStrokePositionSegment) => {
     drawQueueRef.current.push(segment);
   };
 

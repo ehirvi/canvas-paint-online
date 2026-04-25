@@ -1,3 +1,5 @@
+import type { TStrokePositionSegment } from "../../provider";
+
 export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
@@ -18,7 +20,7 @@ export interface IMessage {
   /**
    * Variable size
    */
-  message: Uint8Array;
+  payload: Uint8Array;
 }
 
 export const isValidMessageType = (type: number): type is EMessageType => {
@@ -34,7 +36,7 @@ export const encodeStringToBytes = (
 };
 
 export const encodePositionToBytes = (
-  segment: [number, number, number, number],
+  segment: TStrokePositionSegment,
 ): Uint8Array<ArrayBuffer> => {
   const buffer = new ArrayBuffer(16);
   const view = new DataView(buffer);
@@ -50,7 +52,7 @@ export const encodePositionToBytes = (
 
 export const decodePositionBytes = (
   bytes: Uint8Array<ArrayBuffer>,
-): [number, number, number, number] => {
+): TStrokePositionSegment => {
   const view = new DataView(bytes.buffer);
 
   const lastPosX = view.getUint32(0);
@@ -62,9 +64,9 @@ export const decodePositionBytes = (
 };
 
 export const encodeProtocolMessage = (
-  payload: IMessage,
+  message: IMessage,
 ): Uint8Array<ArrayBuffer> => {
-  const { length, type, message } = payload;
+  const { length, type, payload } = message;
   const buffer = new ArrayBuffer(4 + length);
   const view = new DataView(buffer);
 
@@ -72,7 +74,7 @@ export const encodeProtocolMessage = (
   view.setUint8(4, type);
 
   const protocolMsg = new Uint8Array(buffer);
-  protocolMsg.set(message, 5);
+  protocolMsg.set(payload, 5);
 
   return protocolMsg;
 };

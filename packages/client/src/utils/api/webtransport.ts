@@ -1,3 +1,4 @@
+import type { TStrokePositionSegment } from "../../provider";
 import { appConfig } from "../config";
 import {
   decodeProtocolMessage,
@@ -69,25 +70,25 @@ export const authenticateUser = (
   accessToken: string,
 ) => {
   const tokenBytes = encodeStringToBytes(accessToken);
-  const payload: IMessage = {
+  const message: IMessage = {
     length: 1 + tokenBytes.length,
     type: EMessageType.USER_AUTHENTICATE,
-    message: tokenBytes,
+    payload: tokenBytes,
   };
-  const protocolMessage = encodeProtocolMessage(payload);
+  const protocolMessage = encodeProtocolMessage(message);
   writeToStream(writer, protocolMessage);
 };
 
 export const updateUserStrokePosition = (
   writer: WritableStreamDefaultWriter,
-  segment: [number, number, number, number],
+  segment: TStrokePositionSegment,
 ) => {
   const positionBytes = encodePositionToBytes(segment);
-  const payload: IMessage = {
+  const message: IMessage = {
     length: 1 + positionBytes.length,
     type: EMessageType.STROKE_POSITION,
-    message: positionBytes,
+    payload: positionBytes,
   };
-  const protocolMessage = encodeProtocolMessage(payload);
+  const protocolMessage = encodeProtocolMessage(message);
   writeToStream(writer, protocolMessage);
 };
