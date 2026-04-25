@@ -56,21 +56,22 @@ const Canvas = () => {
   };
 
   const onMouseMove = (pos: [number, number]) => {
-    if (isMousePressedDown.current) {
-      const lastPos = lastPosRef.current;
-      if (lastPos) {
-        pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
-        sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
-        lastPosRef.current = pos;
-      }
+    if (!isMousePressedDown.current) {
+      return;
     }
+
+    const lastPos = lastPosRef.current;
+    if (!lastPos) {
+      return;
+    }
+
+    pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
+    sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+    lastPosRef.current = pos;
   };
 
   const onMouseDown = (pos: [number, number]) => {
     isMousePressedDown.current = true;
-    const ctx = ctxRef.current as CanvasRenderingContext2D;
-    ctx.beginPath();
-    ctx.moveTo(pos[0], pos[1]);
     lastPosRef.current = pos;
   };
 
