@@ -1,5 +1,3 @@
-import type { TStrokePositionSegment } from "../../provider";
-
 export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
@@ -7,6 +5,13 @@ export const EMessageType = {
 } as const;
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
+
+export type TStrokePositionSegment = [number, number, number, number];
+
+export type TMessagePayload = {
+  [EMessageType.USER_AUTHENTICATE]: string;
+  [EMessageType.STROKE_POSITION]: TStrokePositionSegment;
+};
 
 export interface IMessage {
   /**

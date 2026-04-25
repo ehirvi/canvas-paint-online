@@ -1,14 +1,15 @@
 import { createContext, useRef, useState } from "react";
-import { decodePositionBytes, EMessageType } from "../utils/protocol";
 import {
-  authenticateUser,
+  decodePositionBytes,
+  EMessageType,
+  type TStrokePositionSegment,
+} from "../utils/protocol";
+import { streamMessageDispatcher } from "../utils/transport/dispatcher";
+import {
   createWebTransportConnection,
-  readFromStream,
   setupWebTransportStream,
-  updateUserStrokePosition,
-} from "../utils/api/webtransport";
-
-export type TStrokePositionSegment = [number, number, number, number];
+} from "../utils/transport/connection";
+import { readFromStream } from "../utils/transport/stream";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;
@@ -46,7 +47,7 @@ export const WebTransportProvider = ({
     drawQueueRef.current.push(pos);
   };
 
-  const messageHandler = (
+  const streamMessageHandler = (
     type: EMessageType,
     payload: Uint8Array<ArrayBuffer>,
   ) => {
@@ -60,8 +61,20 @@ export const WebTransportProvider = ({
     }
   };
 
+  const authenticateUser = (accessToken: string) => {
+    streamMessageDispatcher(
+      writerRef.current!,
+      EMessageType.USER_AUTHENTICATE,
+      accessToken,
+    );
+  };
+
   const sendPositionUpdate = (segment: TStrokePositionSegment) => {
-    updateUserStrokePosition(writerRef.current!, segment);
+    streamMessageDispatcher(
+      writerRef.current!,
+      EMessageType.STROKE_POSITION,
+      segment,
+    );
   };
 
   const getDrawQueue = () => {
@@ -84,8 +97,8 @@ export const WebTransportProvider = ({
     writerRef.current = stream.writable.getWriter();
     readerRef.current = stream.readable.getReader();
 
-    authenticateUser(writerRef.current, accessToken);
-    await readFromStream(readerRef.current, messageHandler);
+    authenticateUser(accessToken);
+    await readFromStream(readerRef.current, streamMessageHandler);
   };
 
   return (
