@@ -1,21 +1,24 @@
 import { createContext, useRef, useState } from "react";
-import { decodePositionBytes, EMessageType } from "../utils/protocol";
 import {
-  authenticateUser,
+  decodePositionBytes,
+  EMessageType,
+  type TStrokePositionSegment,
+} from "../utils/protocol";
+import { streamMessageDispatcher } from "../utils/transport/dispatcher";
+import {
   createWebTransportConnection,
-  readFromStream,
   setupWebTransportStream,
-  updateUserStrokePosition,
-} from "../utils/api/webtransport";
+} from "../utils/transport/connection";
+import { readFromStream } from "../utils/transport/stream";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;
   bidirStream: WebTransportBidirectionalStream | null;
   isAuthenticated: boolean;
   initWebTransport: (accessToken: string) => void;
-  sendPositionUpdate: (segment: [number, number, number, number]) => void;
-  getDrawQueue: () => Array<[number, number, number, number]>;
-  pushToDrawQueue: (segment: [number, number, number, number]) => void;
+  sendPositionUpdate: (segment: TStrokePositionSegment) => void;
+  getDrawQueue: () => Array<TStrokePositionSegment>;
+  pushToDrawQueue: (segment: TStrokePositionSegment) => void;
 }
 
 export const WebTransportContext = createContext<IWebTransportContext | null>(
@@ -31,7 +34,7 @@ export const WebTransportProvider = ({
   const streamRef = useRef<WebTransportBidirectionalStream>(null);
   const writerRef = useRef<WritableStreamDefaultWriter>(null);
   const readerRef = useRef<ReadableStreamDefaultReader>(null);
-  const drawQueueRef = useRef<Array<[number, number, number, number]>>([]);
+  const drawQueueRef = useRef<Array<TStrokePositionSegment>>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
@@ -44,7 +47,7 @@ export const WebTransportProvider = ({
     drawQueueRef.current.push(pos);
   };
 
-  const messageHandler = (
+  const streamMessageHandler = (
     type: EMessageType,
     payload: Uint8Array<ArrayBuffer>,
   ) => {
@@ -58,8 +61,20 @@ export const WebTransportProvider = ({
     }
   };
 
-  const sendPositionUpdate = (segment: [number, number, number, number]) => {
-    updateUserStrokePosition(writerRef.current!, segment);
+  const authenticateUser = (accessToken: string) => {
+    streamMessageDispatcher(
+      writerRef.current!,
+      EMessageType.USER_AUTHENTICATE,
+      accessToken,
+    );
+  };
+
+  const sendPositionUpdate = (segment: TStrokePositionSegment) => {
+    streamMessageDispatcher(
+      writerRef.current!,
+      EMessageType.STROKE_POSITION,
+      segment,
+    );
   };
 
   const getDrawQueue = () => {
@@ -68,7 +83,7 @@ export const WebTransportProvider = ({
     return queue;
   };
 
-  const pushToDrawQueue = (segment: [number, number, number, number]) => {
+  const pushToDrawQueue = (segment: TStrokePositionSegment) => {
     drawQueueRef.current.push(segment);
   };
 
@@ -82,8 +97,8 @@ export const WebTransportProvider = ({
     writerRef.current = stream.writable.getWriter();
     readerRef.current = stream.readable.getReader();
 
-    authenticateUser(writerRef.current, accessToken);
-    await readFromStream(readerRef.current, messageHandler);
+    authenticateUser(accessToken);
+    await readFromStream(readerRef.current, streamMessageHandler);
   };
 
   return (

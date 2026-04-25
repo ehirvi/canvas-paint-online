@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Stack } from "../../components/Stack";
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
-import { getAccessToken, setAccessToken } from "../../utils/storage";
+import { getAccessToken, storeAccessToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
@@ -56,21 +56,22 @@ const Canvas = () => {
   };
 
   const onMouseMove = (pos: [number, number]) => {
-    if (isMousePressedDown.current) {
-      const lastPos = lastPosRef.current;
-      if (lastPos) {
-        pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
-        sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
-        lastPosRef.current = pos;
-      }
+    if (!isMousePressedDown.current) {
+      return;
     }
+
+    const lastPos = lastPosRef.current;
+    if (!lastPos) {
+      return;
+    }
+
+    pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
+    sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+    lastPosRef.current = pos;
   };
 
   const onMouseDown = (pos: [number, number]) => {
     isMousePressedDown.current = true;
-    const ctx = ctxRef.current as CanvasRenderingContext2D;
-    ctx.beginPath();
-    ctx.moveTo(pos[0], pos[1]);
     lastPosRef.current = pos;
   };
 
@@ -160,7 +161,7 @@ export const CanvasWrapper = () => {
 
       const session = await joinSession(sessionId!);
       if (session) {
-        setAccessToken(session.accessToken);
+        storeAccessToken(session.accessToken);
         initWebTransport(session.accessToken);
       }
     };

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { ISessionCreateResponse } from "../../utils/api/types";
 import { useNavigate } from "react-router";
 import { constructCanvasRoute } from "../../utils/routes";
-import { setAccessToken } from "../../utils/storage";
+import { storeAccessToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 
@@ -28,7 +28,7 @@ export const Home = () => {
     setLoading(true);
     const session = await createSession();
     if (session) {
-      setAccessToken(session.accessToken);
+      storeAccessToken(session.accessToken);
       initWebTransport(session.accessToken);
       setSessionId(session.sessionId);
     }
