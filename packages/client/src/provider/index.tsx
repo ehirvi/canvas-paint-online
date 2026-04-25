@@ -1,10 +1,11 @@
 import { createContext, useRef, useState } from "react";
-import { EMessageType } from "../utils/protocol";
+import { decodePositionBytes, EMessageType } from "../utils/protocol";
 import {
   authenticateUser,
   createWebTransportConnection,
   readFromStream,
   setupWebTransportStream,
+  updateUserStrokePosition,
 } from "../utils/api/webtransport";
 
 export interface IWebTransportContext {
@@ -12,7 +13,9 @@ export interface IWebTransportContext {
   bidirStream: WebTransportBidirectionalStream | null;
   isAuthenticated: boolean;
   initWebTransport: (accessToken: string) => void;
-  setIsAuthenticated: (value: React.SetStateAction<boolean>) => void;
+  sendPositionUpdate: (segment: [number, number, number, number]) => void;
+  getDrawQueue: () => Array<[number, number, number, number]>;
+  pushToDrawQueue: (segment: [number, number, number, number]) => void;
 }
 
 export const WebTransportContext = createContext<IWebTransportContext | null>(
@@ -28,6 +31,7 @@ export const WebTransportProvider = ({
   const streamRef = useRef<WebTransportBidirectionalStream>(null);
   const writerRef = useRef<WritableStreamDefaultWriter>(null);
   const readerRef = useRef<ReadableStreamDefaultReader>(null);
+  const drawQueueRef = useRef<Array<[number, number, number, number]>>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
@@ -35,11 +39,37 @@ export const WebTransportProvider = ({
     setIsAuthenticated(value === 1 ? true : false);
   };
 
-  const messageHandler = (type: number, payload: Uint8Array<ArrayBuffer>) => {
+  const positionUpdateHandler = (payload: Uint8Array<ArrayBuffer>) => {
+    const pos = decodePositionBytes(payload);
+    drawQueueRef.current.push(pos);
+  };
+
+  const messageHandler = (
+    type: EMessageType,
+    payload: Uint8Array<ArrayBuffer>,
+  ) => {
     switch (type) {
       case EMessageType.AUTHENTICATE_SUCCESS:
         authSuccessHandler(payload);
+        break;
+      case EMessageType.STROKE_POSITION:
+        positionUpdateHandler(payload);
+        break;
     }
+  };
+
+  const sendPositionUpdate = (segment: [number, number, number, number]) => {
+    updateUserStrokePosition(writerRef.current!, segment);
+  };
+
+  const getDrawQueue = () => {
+    const queue = drawQueueRef.current;
+    drawQueueRef.current = [];
+    return queue;
+  };
+
+  const pushToDrawQueue = (segment: [number, number, number, number]) => {
+    drawQueueRef.current.push(segment);
   };
 
   const initWebTransport = async (accessToken: string) => {
@@ -63,7 +93,9 @@ export const WebTransportProvider = ({
         bidirStream: streamRef.current,
         isAuthenticated,
         initWebTransport,
-        setIsAuthenticated,
+        sendPositionUpdate,
+        getDrawQueue,
+        pushToDrawQueue,
       }}
     >
       {children}

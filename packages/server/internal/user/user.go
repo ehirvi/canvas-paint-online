@@ -18,6 +18,7 @@ type User struct {
 	ID      common.ID
 	Role    Role
 	Session *webtransport.Session
+	Stream  *webtransport.Stream
 }
 
 type Manager struct {
@@ -30,7 +31,12 @@ func NewManager() *Manager {
 
 func (m *Manager) CreateUser(role Role) *User {
 	id, _ := uuid.NewRandom()
-	user := &User{ID: id, Role: role, Session: &webtransport.Session{}}
+	user := &User{ID: id, Role: role, Session: &webtransport.Session{}, Stream: &webtransport.Stream{}}
 	m.users[id] = user
+	return user
+}
+
+func (m *Manager) GetUser(id common.ID) *User {
+	user := m.users[id]
 	return user
 }

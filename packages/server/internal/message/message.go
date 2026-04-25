@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 
 	"github.com/quic-go/webtransport-go"
@@ -12,6 +13,7 @@ type MessageType byte
 const (
 	UserAuthenticate    MessageType = 0x01
 	AuthenticateSuccess MessageType = 0x02
+	StrokePosition      MessageType = 0x03
 )
 
 type Message struct {
@@ -51,4 +53,25 @@ func DecodeMessage(stream *webtransport.Stream) (*Message, error) {
 	msg.Payload = data[1:]
 
 	return msg, nil
+}
+
+func decodeStrokePosition(payload []byte) (uint32, uint32, uint32, uint32) {
+	lastPosX := binary.BigEndian.Uint32(payload[:4])
+	lastPosY := binary.BigEndian.Uint32(payload[4:8])
+	posX := binary.BigEndian.Uint32(payload[8:12])
+	posY := binary.BigEndian.Uint32(payload[12:])
+
+	return lastPosX, lastPosY, posX, posY
+}
+
+func (msg Message) ValidateStrokePosition() error {
+	lastPosX, lastPosY, posX, posY := decodeStrokePosition(msg.Payload)
+	if lastPosX > 1280 || posX > 1280 {
+		return errors.New("Invalid message payload")
+	}
+	if lastPosY > 960 || posY > 960 {
+		return errors.New("Invalid message payload")
+	}
+
+	return nil
 }

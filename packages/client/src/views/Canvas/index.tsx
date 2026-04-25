@@ -43,6 +43,9 @@ const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
+  const lastPosRef = useRef<[number, number]>(null);
+  const { sendPositionUpdate, getDrawQueue, pushToDrawQueue } =
+    useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const ctx = canvasRef.current as HTMLCanvasElement;
@@ -54,11 +57,12 @@ const Canvas = () => {
 
   const onMouseMove = (pos: [number, number]) => {
     if (isMousePressedDown.current) {
-      const ctx = ctxRef.current as CanvasRenderingContext2D;
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 5;
-      ctx.lineTo(pos[0], pos[1]);
-      ctx.stroke();
+      const lastPos = lastPosRef.current;
+      if (lastPos) {
+        pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
+        sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+        lastPosRef.current = pos;
+      }
     }
   };
 
@@ -67,11 +71,13 @@ const Canvas = () => {
     const ctx = ctxRef.current as CanvasRenderingContext2D;
     ctx.beginPath();
     ctx.moveTo(pos[0], pos[1]);
+    lastPosRef.current = pos;
   };
 
   const onMouseUp = (pos: [number, number]) => {
     onMouseMove(pos);
     isMousePressedDown.current = false;
+    lastPosRef.current = null;
   };
 
   const createEventListeners = (canvas: HTMLCanvasElement) => {
@@ -84,8 +90,30 @@ const Canvas = () => {
     canvas.addEventListener("mouseup", (ev) => onMouseUp(getMousePosition(ev)));
   };
 
+  const renderStrokes = () => {
+    const queue = getDrawQueue();
+    const ctx = ctxRef.current as CanvasRenderingContext2D;
+    for (let i = 0; i < queue.length; i++) {
+      const pos = queue[i];
+      if (!pos) {
+        return;
+      }
+
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(pos[0], pos[1]);
+      ctx.lineTo(pos[2], pos[3]);
+      ctx.stroke();
+    }
+    requestAnimationFrame(renderStrokes);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
+    let frameId: number;
 
     if (canvas) {
       ctxRef.current = canvas.getContext("2d");
@@ -95,6 +123,12 @@ const Canvas = () => {
 
       createEventListeners(canvas);
     }
+
+    frameId = requestAnimationFrame(renderStrokes);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
   }, []);
 
   return (

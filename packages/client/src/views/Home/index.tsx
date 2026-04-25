@@ -19,7 +19,7 @@ export const Home = () => {
   const { isAuthenticated, initWebTransport } = useWebTransportContext();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && sessionId) {
       navigate(constructCanvasRoute(sessionId));
     }
   }, [isAuthenticated]);

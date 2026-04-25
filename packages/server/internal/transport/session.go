@@ -21,6 +21,20 @@ type TransportContext struct {
 	CanvasSession       *session.Session
 }
 
+func (t *TransportContext) handleStrokePositionUpdate(msg message.Message) {
+	err := msg.ValidateStrokePosition()
+	if err != nil {
+		log.Println(err)
+	}
+	peerMsg := constructStrokePositionUpdateMsg(msg.Payload)
+	for id, user := range t.CanvasSession.Users {
+		if id != t.User.ID {
+			sendStreamMessage(user.Stream, peerMsg)
+		}
+	}
+
+}
+
 func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg *message.Message) message.Message {
 	switch msg.Type {
 	case message.UserAuthenticate:
@@ -30,10 +44,18 @@ func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg
 		if err != nil {
 			fmt.Printf("uuid err: %s\n", err)
 		}
-		context.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession)
+		context.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
+
+		session := context.SessionManager.GetSession(sessionId)
+		user := context.UserManager.GetUser(userId)
+		t.CanvasSession = session
+		t.User = user
+
 		resPayload := constructAuthSuccessMsg(true)
 		return resPayload
 
+	case message.StrokePosition:
+		t.handleStrokePositionUpdate(*msg)
 	}
 	return message.Message{}
 }
@@ -50,9 +72,14 @@ func constructAuthSuccessMsg(success bool) message.Message {
 	return msg
 }
 
-func (t *TransportContext) sendStreamMessage(payload message.Message) {
+func constructStrokePositionUpdateMsg(payload []byte) message.Message {
+	msg := message.Message{Type: message.StrokePosition, Payload: payload}
+	return msg
+}
+
+func sendStreamMessage(s *webtransport.Stream, payload message.Message) {
 	encodedPayload := message.EncodeMessage(payload)
-	t.WebTransportStream.Write(encodedPayload)
+	s.Write(encodedPayload)
 }
 
 func (t *TransportContext) readStreamMessage() (*message.Message, error) {
@@ -66,7 +93,7 @@ func (t *TransportContext) handleStream(context *context.ApplicationContext) {
 	for {
 		msg, _ := t.readStreamMessage()
 		resPayload := t.parseMessage(context, msg)
-		t.sendStreamMessage(resPayload)
+		sendStreamMessage(t.WebTransportStream, resPayload)
 	}
 }
 
