@@ -13,8 +13,9 @@ export interface IWebTransportContext {
   bidirStream: WebTransportBidirectionalStream | null;
   isAuthenticated: boolean;
   initWebTransport: (accessToken: string) => void;
-  sendStrokeUpdate: (segment: [number, number, number, number]) => void;
-  getPositionBuffer: () => Array<[number, number, number, number]>;
+  sendPositionUpdate: (segment: [number, number, number, number]) => void;
+  getDrawQueue: () => Array<[number, number, number, number]>;
+  pushToDrawQueue: (segment: [number, number, number, number]) => void;
 }
 
 export const WebTransportContext = createContext<IWebTransportContext | null>(
@@ -30,7 +31,7 @@ export const WebTransportProvider = ({
   const streamRef = useRef<WebTransportBidirectionalStream>(null);
   const writerRef = useRef<WritableStreamDefaultWriter>(null);
   const readerRef = useRef<ReadableStreamDefaultReader>(null);
-  const posBufferRef = useRef<Array<[number, number, number, number]>>([]);
+  const drawQueueRef = useRef<Array<[number, number, number, number]>>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
@@ -38,9 +39,9 @@ export const WebTransportProvider = ({
     setIsAuthenticated(value === 1 ? true : false);
   };
 
-  const strokePositionHandler = (payload: Uint8Array<ArrayBuffer>) => {
+  const positionUpdateHandler = (payload: Uint8Array<ArrayBuffer>) => {
     const pos = decodePositionBytes(payload);
-    posBufferRef.current?.push(pos);
+    drawQueueRef.current.push(pos);
   };
 
   const messageHandler = (
@@ -52,17 +53,23 @@ export const WebTransportProvider = ({
         authSuccessHandler(payload);
         break;
       case EMessageType.STROKE_POSITION:
-        strokePositionHandler(payload);
+        positionUpdateHandler(payload);
         break;
     }
   };
 
-  const sendStrokeUpdate = (segment: [number, number, number, number]) => {
+  const sendPositionUpdate = (segment: [number, number, number, number]) => {
     updateUserStrokePosition(writerRef.current!, segment);
   };
 
-  const getPositionBuffer = () => {
-    return posBufferRef.current;
+  const getDrawQueue = () => {
+    const queue = drawQueueRef.current;
+    drawQueueRef.current = [];
+    return queue;
+  };
+
+  const pushToDrawQueue = (segment: [number, number, number, number]) => {
+    drawQueueRef.current.push(segment);
   };
 
   const initWebTransport = async (accessToken: string) => {
@@ -86,8 +93,9 @@ export const WebTransportProvider = ({
         bidirStream: streamRef.current,
         isAuthenticated,
         initWebTransport,
-        sendStrokeUpdate,
-        getPositionBuffer,
+        sendPositionUpdate,
+        getDrawQueue,
+        pushToDrawQueue,
       }}
     >
       {children}

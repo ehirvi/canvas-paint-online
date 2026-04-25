@@ -44,7 +44,8 @@ const Canvas = () => {
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
   const lastPosRef = useRef<[number, number]>(null);
-  const { sendStrokeUpdate, getPositionBuffer } = useWebTransportContext();
+  const { sendPositionUpdate, getDrawQueue, pushToDrawQueue } =
+    useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const ctx = canvasRef.current as HTMLCanvasElement;
@@ -58,16 +59,8 @@ const Canvas = () => {
     if (isMousePressedDown.current) {
       const lastPos = lastPosRef.current;
       if (lastPos) {
-        const ctx = ctxRef.current as CanvasRenderingContext2D;
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 5;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.beginPath();
-        ctx.moveTo(lastPos[0], lastPos[1]);
-        ctx.lineTo(pos[0], pos[1]);
-        ctx.stroke();
-        sendStrokeUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+        pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
+        sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
         lastPosRef.current = pos;
       }
     }
@@ -97,16 +90,16 @@ const Canvas = () => {
     canvas.addEventListener("mouseup", (ev) => onMouseUp(getMousePosition(ev)));
   };
 
-  const paintPeerStroke = () => {
-    const buffer = getPositionBuffer();
+  const renderStrokes = () => {
+    const queue = getDrawQueue();
     const ctx = ctxRef.current as CanvasRenderingContext2D;
-    while (buffer.length > 0) {
-      const pos = buffer.shift();
+    for (let i = 0; i < queue.length; i++) {
+      const pos = queue[i];
       if (!pos) {
         return;
       }
 
-      ctx.strokeStyle = "red";
+      ctx.strokeStyle = "blue";
       ctx.lineWidth = 5;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -115,7 +108,7 @@ const Canvas = () => {
       ctx.lineTo(pos[2], pos[3]);
       ctx.stroke();
     }
-    requestAnimationFrame(paintPeerStroke);
+    requestAnimationFrame(renderStrokes);
   };
 
   useEffect(() => {
@@ -131,7 +124,7 @@ const Canvas = () => {
       createEventListeners(canvas);
     }
 
-    frameId = requestAnimationFrame(paintPeerStroke);
+    frameId = requestAnimationFrame(renderStrokes);
 
     return () => {
       cancelAnimationFrame(frameId);
