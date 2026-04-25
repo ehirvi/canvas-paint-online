@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Stack } from "../../components/Stack";
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
-import { getAccessToken, setAccessToken } from "../../utils/storage";
+import { getAccessToken, storeAccessToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
@@ -161,7 +161,7 @@ export const CanvasWrapper = () => {
 
       const session = await joinSession(sessionId!);
       if (session) {
-        setAccessToken(session.accessToken);
+        storeAccessToken(session.accessToken);
         initWebTransport(session.accessToken);
       }
     };
