@@ -27,6 +27,11 @@ var SessionJoin = Route{
 			return
 		}
 
+		if len(session.Users) == 2 {
+			SendErrorResponse(w, "Session has maximum amount of users", http.StatusForbidden)
+			return
+		}
+
 		user := context.UserManager.CreateUser(user.Guest)
 		context.SessionManager.JoinSession(session.ID, user)
 		accessToken := token.CreateAccessToken(user, session.ID)

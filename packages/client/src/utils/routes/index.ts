@@ -1,4 +1,5 @@
 export const EAppRoutes = {
+  HOME: "/",
   CANVAS: "/canvas/:sessionId",
 } as const;
 
