@@ -21,6 +21,24 @@ type TransportContext struct {
 	CanvasSession       *session.Session
 }
 
+func (t *TransportContext) handleUserAuthenticate(context *context.ApplicationContext, msg message.Message) {
+	claims := token.VerifyAccessToken(msg.Payload)
+	sessionId, err := uuid.Parse(claims.SessionID)
+	userId, _ := uuid.Parse(claims.UserID)
+	if err != nil {
+		fmt.Printf("uuid err: %s\n", err)
+	}
+	context.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
+
+	session := context.SessionManager.GetSession(sessionId)
+	user := context.UserManager.GetUser(userId)
+	t.CanvasSession = session
+	t.User = user
+
+	authSuccessMsg := constructAuthSuccessMsg(true)
+	sendStreamMessage(user.Stream, authSuccessMsg)
+}
+
 func (t *TransportContext) handleStrokePositionUpdate(msg message.Message) {
 	err := msg.ValidateStrokePosition()
 	if err != nil {
@@ -35,29 +53,18 @@ func (t *TransportContext) handleStrokePositionUpdate(msg message.Message) {
 
 }
 
-func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg *message.Message) message.Message {
+func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg *message.Message) {
+	if msg == nil {
+		return
+	}
+
 	switch msg.Type {
 	case message.UserAuthenticate:
-		claims := token.VerifyAccessToken(msg.Payload)
-		sessionId, err := uuid.Parse(claims.SessionID)
-		userId, _ := uuid.Parse(claims.UserID)
-		if err != nil {
-			fmt.Printf("uuid err: %s\n", err)
-		}
-		context.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
-
-		session := context.SessionManager.GetSession(sessionId)
-		user := context.UserManager.GetUser(userId)
-		t.CanvasSession = session
-		t.User = user
-
-		resPayload := constructAuthSuccessMsg(true)
-		return resPayload
+		t.handleUserAuthenticate(context, *msg)
 
 	case message.StrokePosition:
 		t.handleStrokePositionUpdate(*msg)
 	}
-	return message.Message{}
 }
 
 func constructAuthSuccessMsg(success bool) message.Message {
@@ -92,8 +99,7 @@ func (t *TransportContext) handleStream(context *context.ApplicationContext) {
 
 	for {
 		msg, _ := t.readStreamMessage()
-		resPayload := t.parseMessage(context, msg)
-		sendStreamMessage(t.WebTransportStream, resPayload)
+		t.parseMessage(context, msg)
 	}
 }
 
