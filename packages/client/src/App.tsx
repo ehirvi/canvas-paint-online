@@ -9,7 +9,7 @@ function App() {
     <WebTransportProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" index element={<Home />} />
+          <Route path={EAppRoutes.HOME} index element={<Home />} />
           <Route path={EAppRoutes.CANVAS} element={<CanvasWrapper />} />
         </Routes>
       </BrowserRouter>
