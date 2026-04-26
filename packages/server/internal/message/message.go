@@ -13,7 +13,7 @@ type MessageType byte
 const (
 	UserAuthenticate    MessageType = 0x01
 	AuthenticateSuccess MessageType = 0x02
-	StrokePosition      MessageType = 0x03
+	StrokeSegment       MessageType = 0x03
 )
 
 type Message struct {
@@ -64,7 +64,7 @@ func decodeStrokePosition(payload []byte) (uint32, uint32, uint32, uint32) {
 	return lastPosX, lastPosY, posX, posY
 }
 
-func (msg Message) ValidateStrokePosition() error {
+func (msg Message) ValidateStrokeSegment() error {
 	lastPosX, lastPosY, posX, posY := decodeStrokePosition(msg.Payload)
 	if lastPosX > 1280 || posX > 1280 {
 		return errors.New("Invalid message payload")

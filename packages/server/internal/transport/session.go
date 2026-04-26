@@ -39,12 +39,12 @@ func (t *TransportContext) handleUserAuthenticate(context *context.ApplicationCo
 	sendStreamMessage(user.Stream, authSuccessMsg)
 }
 
-func (t *TransportContext) handleStrokePositionUpdate(msg message.Message) {
-	err := msg.ValidateStrokePosition()
+func (t *TransportContext) handleStrokeSegmentUpdate(msg message.Message) {
+	err := msg.ValidateStrokeSegment()
 	if err != nil {
 		log.Println(err)
 	}
-	peerMsg := constructStrokePositionUpdateMsg(msg.Payload)
+	peerMsg := constructStrokeSegmentMsg(msg.Payload)
 	for id, user := range t.CanvasSession.Users {
 		if id != t.User.ID {
 			sendStreamMessage(user.Stream, peerMsg)
@@ -62,8 +62,8 @@ func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg
 	case message.UserAuthenticate:
 		t.handleUserAuthenticate(context, *msg)
 
-	case message.StrokePosition:
-		t.handleStrokePositionUpdate(*msg)
+	case message.StrokeSegment:
+		t.handleStrokeSegmentUpdate(*msg)
 	}
 }
 
@@ -79,8 +79,8 @@ func constructAuthSuccessMsg(success bool) message.Message {
 	return msg
 }
 
-func constructStrokePositionUpdateMsg(payload []byte) message.Message {
-	msg := message.Message{Type: message.StrokePosition, Payload: payload}
+func constructStrokeSegmentMsg(payload []byte) message.Message {
+	msg := message.Message{Type: message.StrokeSegment, Payload: payload}
 	return msg
 }
 
