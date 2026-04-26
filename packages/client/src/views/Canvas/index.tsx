@@ -6,10 +6,11 @@ import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
+import type { TStrokePositionSegment } from "../../utils/protocol";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 960;
-const DEFAULT_COLOR = "black";
+const DEFAULT_COLOR = "#000000";
 
 const canvasFadeInAnimation = keyframes`
   from {
@@ -90,8 +91,16 @@ const Canvas = () => {
       return;
     }
 
-    pushToDrawQueue([lastPos[0], lastPos[1], pos[0], pos[1]]);
-    sendPositionUpdate([lastPos[0], lastPos[1], pos[0], pos[1]]);
+    const payload: TStrokePositionSegment = [
+      lastPos[0],
+      lastPos[1],
+      pos[0],
+      pos[1],
+      pickedColorRef.current,
+    ];
+    pushToDrawQueue(payload);
+    sendPositionUpdate(payload);
+
     lastPosRef.current = pos;
   };
 
@@ -125,7 +134,7 @@ const Canvas = () => {
         return;
       }
 
-      ctx.strokeStyle = pickedColorRef.current;
+      ctx.strokeStyle = pos[4];
       ctx.lineWidth = 5;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";

@@ -6,7 +6,7 @@ export const EMessageType = {
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
 
-export type TStrokePositionSegment = [number, number, number, number];
+export type TStrokePositionSegment = [number, number, number, number, string];
 
 export type TMessagePayload = {
   [EMessageType.USER_AUTHENTICATE]: string;
@@ -40,10 +40,17 @@ export const encodeStringToBytes = (
   return bytes;
 };
 
+const decodeBytesToString = (bytes: Uint8Array<ArrayBuffer>): string => {
+  const decoder = new TextDecoder();
+  const string = decoder.decode(bytes);
+  return string;
+};
+
 export const encodePositionToBytes = (
   segment: TStrokePositionSegment,
 ): Uint8Array<ArrayBuffer> => {
-  const buffer = new ArrayBuffer(16);
+  const color = encodeStringToBytes(segment[4]);
+  const buffer = new ArrayBuffer(16 + color.length);
   const view = new DataView(buffer);
 
   view.setUint32(0, segment[0]);
@@ -52,6 +59,7 @@ export const encodePositionToBytes = (
   view.setUint32(12, segment[3]);
 
   const bytes = new Uint8Array(buffer);
+  bytes.set(color, 16);
   return bytes;
 };
 
@@ -65,7 +73,9 @@ export const decodePositionBytes = (
   const posX = view.getUint32(8);
   const posY = view.getUint32(12);
 
-  return [lastPosX, lastPosY, posX, posY];
+  const color = decodeBytesToString(bytes.slice(16));
+
+  return [lastPosX, lastPosY, posX, posY, color];
 };
 
 export const encodeProtocolMessage = (
