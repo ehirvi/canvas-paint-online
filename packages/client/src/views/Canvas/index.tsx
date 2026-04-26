@@ -9,7 +9,7 @@ import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 import type { TStrokeSegment } from "../../utils/protocol";
 
 const CANVAS_WIDTH = 1280;
-const CANVAS_HEIGHT = 960;
+const CANVAS_HEIGHT = 720;
 const DEFAULT_COLOR = "#000000";
 
 const canvasFadeInAnimation = keyframes`
