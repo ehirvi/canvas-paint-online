@@ -1,16 +1,16 @@
 export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
-  STROKE_POSITION: 0x03,
+  STROKE_SEGMENT: 0x03,
 } as const;
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
 
-export type TStrokePositionSegment = [number, number, number, number];
+export type TStrokeSegment = [number, number, number, number, string];
 
 export type TMessagePayload = {
   [EMessageType.USER_AUTHENTICATE]: string;
-  [EMessageType.STROKE_POSITION]: TStrokePositionSegment;
+  [EMessageType.STROKE_SEGMENT]: TStrokeSegment;
 };
 
 export interface IMessage {
@@ -40,10 +40,17 @@ export const encodeStringToBytes = (
   return bytes;
 };
 
-export const encodePositionToBytes = (
-  segment: TStrokePositionSegment,
+const decodeBytesToString = (bytes: Uint8Array<ArrayBuffer>): string => {
+  const decoder = new TextDecoder();
+  const string = decoder.decode(bytes);
+  return string;
+};
+
+export const encodeStrokeSegmentToBytes = (
+  segment: TStrokeSegment,
 ): Uint8Array<ArrayBuffer> => {
-  const buffer = new ArrayBuffer(16);
+  const color = encodeStringToBytes(segment[4]);
+  const buffer = new ArrayBuffer(16 + color.length);
   const view = new DataView(buffer);
 
   view.setUint32(0, segment[0]);
@@ -52,12 +59,13 @@ export const encodePositionToBytes = (
   view.setUint32(12, segment[3]);
 
   const bytes = new Uint8Array(buffer);
+  bytes.set(color, 16);
   return bytes;
 };
 
-export const decodePositionBytes = (
+export const decodeBytesToStrokeSegment = (
   bytes: Uint8Array<ArrayBuffer>,
-): TStrokePositionSegment => {
+): TStrokeSegment => {
   const view = new DataView(bytes.buffer);
 
   const lastPosX = view.getUint32(0);
@@ -65,7 +73,9 @@ export const decodePositionBytes = (
   const posX = view.getUint32(8);
   const posY = view.getUint32(12);
 
-  return [lastPosX, lastPosY, posX, posY];
+  const color = decodeBytesToString(bytes.slice(16));
+
+  return [lastPosX, lastPosY, posX, posY, color];
 };
 
 export const encodeProtocolMessage = (

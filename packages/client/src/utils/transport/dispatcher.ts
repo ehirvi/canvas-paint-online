@@ -1,8 +1,8 @@
 import {
   EMessageType,
-  encodePositionToBytes,
   encodeProtocolMessage,
   encodeStringToBytes,
+  encodeStrokeSegmentToBytes,
   type IMessage,
   type TMessagePayload,
 } from "../protocol";
@@ -16,7 +16,7 @@ type TEncoderMap = {
 
 const messagePayloadEncoderMap: TEncoderMap = {
   [EMessageType.USER_AUTHENTICATE]: encodeStringToBytes,
-  [EMessageType.STROKE_POSITION]: encodePositionToBytes,
+  [EMessageType.STROKE_SEGMENT]: encodeStrokeSegmentToBytes,
 };
 
 export const streamMessageDispatcher = <T extends keyof TMessagePayload>(
