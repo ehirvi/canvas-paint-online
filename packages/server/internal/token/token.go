@@ -16,7 +16,7 @@ type CustomJwtClaims struct {
 	jwt.RegisteredClaims
 }
 
-func CreateAccessToken(user *user.User, sessionId common.ID) string {
+func CreateSessionToken(user *user.User, sessionId common.ID) string {
 	secret := []byte(os.Getenv("SIGNING_SECRET"))
 
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, CustomJwtClaims{
@@ -28,7 +28,7 @@ func CreateAccessToken(user *user.User, sessionId common.ID) string {
 	return token
 }
 
-func VerifyAccessToken(tokenPayload []byte) *CustomJwtClaims {
+func VerifySessionToken(tokenPayload []byte) *CustomJwtClaims {
 	secret := []byte(os.Getenv("SIGNING_SECRET"))
 	tokenString := string(tokenPayload)
 	token, err := jwt.ParseWithClaims(tokenString, &CustomJwtClaims{}, func(token *jwt.Token) (any, error) {

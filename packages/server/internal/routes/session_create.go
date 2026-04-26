@@ -15,11 +15,11 @@ var SessionCreate = Route{
 		sessionId := context.SessionManager.CreateSession()
 		user := context.UserManager.CreateUser(user.Host)
 		context.SessionManager.JoinSession(sessionId, user)
-		token := token.CreateAccessToken(user, sessionId)
+		token := token.CreateSessionToken(user, sessionId)
 
 		res := protocol.SessionCreateResponse{
-			SessionID:   sessionId.String(),
-			AccessToken: token,
+			SessionID:    sessionId.String(),
+			SessionToken: token,
 		}
 
 		SendJsonResponse(w, res, http.StatusCreated)

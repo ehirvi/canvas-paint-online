@@ -34,10 +34,10 @@ var SessionJoin = Route{
 
 		user := context.UserManager.CreateUser(user.Guest)
 		context.SessionManager.JoinSession(session.ID, user)
-		accessToken := token.CreateAccessToken(user, session.ID)
+		token := token.CreateSessionToken(user, session.ID)
 
 		res := protocol.SessionJoinResponse{
-			AccessToken: accessToken,
+			SessionToken: token,
 		}
 
 		SendJsonResponse(w, res, http.StatusOK)
