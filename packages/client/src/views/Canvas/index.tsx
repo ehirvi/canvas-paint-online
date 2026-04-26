@@ -87,8 +87,13 @@ const Canvas = () => {
   const currentPosRef = useRef<[number, number]>(null);
   const lastPosRef = useRef<[number, number]>(null);
 
-  const { sendStrokeUpdate, getDrawQueue, pushToDrawQueue } =
-    useWebTransportContext();
+  const {
+    sendStrokeUpdate,
+    sendMouseUpdate,
+    getDrawQueue,
+    getMousePositionUpdate,
+    pushToDrawQueue,
+  } = useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const canvas = paintCanvasRef.current as HTMLCanvasElement;
@@ -100,6 +105,7 @@ const Canvas = () => {
 
   const onMouseMove = (pos: [number, number]) => {
     currentPosRef.current = pos;
+    sendMouseUpdate(pos);
 
     if (!isMousePressedDown.current) {
       return;
@@ -146,17 +152,12 @@ const Canvas = () => {
 
   const renderStrokes = () => {
     const queue = getDrawQueue();
+    const mousePos = getMousePositionUpdate();
 
-    if (currentPosRef.current) {
+    if (mousePos) {
       const mouseCtx = mouseCtxRef.current as CanvasRenderingContext2D;
       mouseCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      mouseCtx.drawImage(
-        PEN_IMAGE,
-        currentPosRef.current[0] - 5,
-        currentPosRef.current[1] - 25,
-        30,
-        30,
-      );
+      mouseCtx.drawImage(PEN_IMAGE, mousePos[0] - 5, mousePos[1] - 25, 30, 30);
     }
 
     const paintCtx = paintCtxRef.current as CanvasRenderingContext2D;

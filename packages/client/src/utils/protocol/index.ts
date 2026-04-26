@@ -2,11 +2,13 @@ export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
   STROKE_SEGMENT: 0x03,
+  MOUSE_POSITION: 0x04,
 } as const;
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
 
 export type TStrokeSegment = [number, number, number, number, string];
+export type TMousePosition = [number, number];
 
 export type TMessagePayload = {
   [EMessageType.USER_AUTHENTICATE]: string;
@@ -76,6 +78,17 @@ export const decodeBytesToStrokeSegment = (
   const color = decodeBytesToString(bytes.slice(16));
 
   return [lastPosX, lastPosY, posX, posY, color];
+};
+
+export const decodeBytesToMousePosition = (
+  bytes: Uint8Array<ArrayBuffer>,
+): TMousePosition => {
+  const view = new DataView(bytes.buffer);
+
+  const posX = view.getUint32(0);
+  const posY = view.getUint32(4);
+
+  return [posX, posY];
 };
 
 export const encodeProtocolMessage = (
