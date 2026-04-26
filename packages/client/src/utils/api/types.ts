@@ -1,6 +1,6 @@
 export interface ISessionCreateResponse {
   sessionId: string;
-  accessToken: string;
+  sessionToken: string;
 }
 
 export interface ISessionJoinResponse extends Omit<

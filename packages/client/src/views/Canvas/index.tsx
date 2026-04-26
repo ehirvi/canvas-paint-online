@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Stack } from "../../components/Stack";
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
-import { getAccessToken, storeAccessToken } from "../../utils/storage";
+import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
@@ -148,21 +148,21 @@ const Canvas = () => {
 
 export const CanvasWrapper = () => {
   const { sessionId } = useParams();
-  const accessToken = getAccessToken();
+  const sessionToken = getSessionToken();
   const { isAuthenticated, initWebTransport } = useWebTransportContext();
 
   useEffect(() => {
     const onJoin = async () => {
-      const hasAccessToken = !!accessToken;
+      const hasSessionToken = !!sessionToken;
 
-      if (hasAccessToken) {
+      if (hasSessionToken) {
         return;
       }
 
       const session = await joinSession(sessionId!);
       if (session) {
-        storeAccessToken(session.accessToken);
-        initWebTransport(session.accessToken);
+        storeSessionToken(session.sessionToken);
+        initWebTransport(session.sessionToken);
       }
     };
 

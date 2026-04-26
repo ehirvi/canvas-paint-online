@@ -13,13 +13,15 @@ export const isSessionCreateResponse = (
     isObject(data) &&
     "sessionId" in data &&
     isString(data.sessionId) &&
-    "accessToken" in data &&
-    isString(data.accessToken)
+    "sessionToken" in data &&
+    isString(data.sessionToken)
   );
 };
 
 export const isSessionJoinResponse = (
   data: unknown,
 ): data is ISessionJoinResponse => {
-  return isObject(data) && "accessToken" in data && isString(data.accessToken);
+  return (
+    isObject(data) && "sessionToken" in data && isString(data.sessionToken)
+  );
 };

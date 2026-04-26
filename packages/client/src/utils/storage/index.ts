@@ -1,7 +1,7 @@
-export const getAccessToken = (): string | null => {
-  return sessionStorage.getItem("accessToken");
+export const getSessionToken = (): string | null => {
+  return sessionStorage.getItem("sessionToken");
 };
 
-export const storeAccessToken = (accessToken: string) => {
-  sessionStorage.setItem("accessToken", accessToken);
+export const storeSessionToken = (sessionToken: string) => {
+  sessionStorage.setItem("sessionToken", sessionToken);
 };

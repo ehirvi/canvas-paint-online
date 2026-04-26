@@ -15,7 +15,7 @@ export interface IWebTransportContext {
   connection: WebTransport | null;
   bidirStream: WebTransportBidirectionalStream | null;
   isAuthenticated: boolean;
-  initWebTransport: (accessToken: string) => void;
+  initWebTransport: (sessionToken: string) => void;
   sendPositionUpdate: (segment: TStrokePositionSegment) => void;
   getDrawQueue: () => Array<TStrokePositionSegment>;
   pushToDrawQueue: (segment: TStrokePositionSegment) => void;
@@ -61,11 +61,11 @@ export const WebTransportProvider = ({
     }
   };
 
-  const authenticateUser = (accessToken: string) => {
+  const authenticateUser = (sessionToken: string) => {
     streamMessageDispatcher(
       writerRef.current!,
       EMessageType.USER_AUTHENTICATE,
-      accessToken,
+      sessionToken,
     );
   };
 
@@ -87,7 +87,7 @@ export const WebTransportProvider = ({
     drawQueueRef.current.push(segment);
   };
 
-  const initWebTransport = async (accessToken: string) => {
+  const initWebTransport = async (sessionToken: string) => {
     const wt = await createWebTransportConnection();
     connectionRef.current = wt;
 
@@ -97,7 +97,7 @@ export const WebTransportProvider = ({
     writerRef.current = stream.writable.getWriter();
     readerRef.current = stream.readable.getReader();
 
-    authenticateUser(accessToken);
+    authenticateUser(sessionToken);
     await readFromStream(readerRef.current, streamMessageHandler);
   };
 
