@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"online-canvas-paint-server/internal/context"
+
+	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/routes"
 	"online-canvas-paint-server/internal/transport"
 
@@ -25,7 +26,7 @@ func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
 	return wtServer
 }
 
-func createHttpRoutes(context *context.ApplicationContext, mux *http.ServeMux) {
+func createHttpRoutes(context *application.ApplicationContext, mux *http.ServeMux) {
 	routes := routes.GetRoutes()
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
@@ -36,7 +37,7 @@ func createHttpRoutes(context *context.ApplicationContext, mux *http.ServeMux) {
 	}
 }
 
-func createWebTransportRoute(context *context.ApplicationContext, wtServer *webtransport.Server, mux *http.ServeMux) {
+func createWebTransportRoute(context *application.ApplicationContext, wtServer *webtransport.Server, mux *http.ServeMux) {
 	pattern := fmt.Sprintf("%s /session/wt", http.MethodConnect)
 	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		transport.UpgradeToWebTransportSession(context, wtServer, w, r)
@@ -53,7 +54,7 @@ func serveWebTransportServer(server *webtransport.Server, certFile string, keyFi
 	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
 }
 
-func InitializeServer(context *context.ApplicationContext) {
+func InitializeServer(context *application.ApplicationContext) {
 	certFile := "localhost.pem"
 	keyFile := "localhost-key.pem"
 

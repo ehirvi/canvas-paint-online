@@ -2,7 +2,7 @@ package routes
 
 import (
 	"net/http"
-	"online-canvas-paint-server/internal/context"
+	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/token"
 	"online-canvas-paint-server/internal/user"
 	"online-canvas-paint-server/pkg/protocol"
@@ -13,7 +13,7 @@ import (
 var SessionJoin = Route{
 	Path:   "/session/{sessionID}/join",
 	Method: HttpMethod(Post),
-	Handler: func(context *context.ApplicationContext, w http.ResponseWriter, r *http.Request) {
+	Handler: func(context *application.ApplicationContext, w http.ResponseWriter, r *http.Request) {
 		sessionID := r.PathValue("sessionID")
 		parsedID, err := uuid.Parse(sessionID)
 		if err != nil {

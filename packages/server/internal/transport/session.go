@@ -1,10 +1,12 @@
 package transport
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"online-canvas-paint-server/internal/context"
+
+	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/message"
 	"online-canvas-paint-server/internal/session"
 	"online-canvas-paint-server/internal/token"
@@ -21,7 +23,7 @@ type TransportContext struct {
 	CanvasSession       *session.Session
 }
 
-func (t *TransportContext) handleUserAuthenticate(context *context.ApplicationContext, msg message.Message) {
+func (t *TransportContext) handleUserAuthenticate(context *application.ApplicationContext, msg message.Message) {
 	claims := token.VerifySessionToken(msg.Payload)
 	sessionId, err := uuid.Parse(claims.SessionID)
 	userId, _ := uuid.Parse(claims.UserID)
@@ -53,7 +55,16 @@ func (t *TransportContext) handleStrokeSegmentUpdate(msg message.Message) {
 
 }
 
-func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg *message.Message) {
+func (t *TransportContext) handleMousePosition(msg message.Message) {
+	peerMsg := constructMousePositionMsg(msg.Payload)
+	for id, user := range t.CanvasSession.Users {
+		if id != t.User.ID {
+			sendDatagram(user.Session, peerMsg)
+		}
+	}
+}
+
+func (t *TransportContext) parseMessage(context *application.ApplicationContext, msg *message.Message) {
 	if msg == nil {
 		return
 	}
@@ -64,7 +75,10 @@ func (t *TransportContext) parseMessage(context *context.ApplicationContext, msg
 
 	case message.StrokeSegment:
 		t.handleStrokeSegmentUpdate(*msg)
+	case message.MousePosition:
+		t.handleMousePosition(*msg)
 	}
+
 }
 
 func constructAuthSuccessMsg(success bool) message.Message {
@@ -84,6 +98,11 @@ func constructStrokeSegmentMsg(payload []byte) message.Message {
 	return msg
 }
 
+func constructMousePositionMsg(payload []byte) message.Message {
+	msg := message.Message{Type: message.MousePosition, Payload: payload}
+	return msg
+}
+
 func sendStreamMessage(s *webtransport.Stream, payload message.Message) {
 	encodedPayload := message.EncodeMessage(payload)
 	s.Write(encodedPayload)
@@ -94,7 +113,7 @@ func (t *TransportContext) readStreamMessage() (*message.Message, error) {
 	return msg, nil
 }
 
-func (t *TransportContext) handleStream(context *context.ApplicationContext) {
+func (t *TransportContext) handleStream(context *application.ApplicationContext) {
 	defer t.WebTransportStream.Close()
 
 	for {
@@ -103,7 +122,26 @@ func (t *TransportContext) handleStream(context *context.ApplicationContext) {
 	}
 }
 
-func UpgradeToWebTransportSession(context *context.ApplicationContext, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
+func sendDatagram(s *webtransport.Session, payload message.Message) {
+	encodedPayload := message.EncodeMessage(payload)
+	s.SendDatagram(encodedPayload)
+}
+
+func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, error) {
+	bytes, _ := t.WebTransportSession.ReceiveDatagram(ctx)
+	msg, _ := message.DecodeDatagram(bytes)
+	return msg, nil
+}
+
+func (t *TransportContext) handleDatagrams(appCtx *application.ApplicationContext) {
+	ctx := context.Background()
+	for {
+		msg, _ := t.readDatagram(ctx)
+		t.parseMessage(appCtx, msg)
+	}
+}
+
+func UpgradeToWebTransportSession(context *application.ApplicationContext, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
 	sess, err := wtServer.Upgrade(w, r)
 	if err != nil {
 		log.Printf("upgrading failed: %s", err)
@@ -111,14 +149,18 @@ func UpgradeToWebTransportSession(context *context.ApplicationContext, wtServer 
 		return
 	}
 
+	t := TransportContext{WebTransportSession: sess}
 	go func() {
 		stream, err := sess.AcceptStream(sess.Context())
 		if err != nil {
 			return
 		}
 
-		t := TransportContext{WebTransportSession: sess, WebTransportStream: stream}
-
+		t.WebTransportStream = stream
 		t.handleStream(context)
+	}()
+
+	go func() {
+		t.handleDatagrams(context)
 	}()
 }

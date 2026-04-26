@@ -2,7 +2,7 @@ package routes
 
 import (
 	"net/http"
-	"online-canvas-paint-server/internal/context"
+	"online-canvas-paint-server/internal/application"
 )
 
 type HttpMethod string
@@ -15,7 +15,7 @@ const (
 type Route struct {
 	Path    string
 	Method  HttpMethod
-	Handler func(*context.ApplicationContext, http.ResponseWriter, *http.Request)
+	Handler func(*application.ApplicationContext, http.ResponseWriter, *http.Request)
 }
 
 var routes = []Route{Health, SessionCreate, SessionJoin}

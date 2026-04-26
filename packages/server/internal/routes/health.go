@@ -3,13 +3,13 @@ package routes
 import (
 	"fmt"
 	"net/http"
-	"online-canvas-paint-server/internal/context"
+	"online-canvas-paint-server/internal/application"
 )
 
 var Health = Route{
 	Path:   "/health",
 	Method: HttpMethod(Get),
-	Handler: func(_ *context.ApplicationContext, w http.ResponseWriter, r *http.Request) {
+	Handler: func(_ *application.ApplicationContext, w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "ok")
 	},
 }
