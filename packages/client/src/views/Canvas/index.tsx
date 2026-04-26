@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { Stack } from "../../components/Stack";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
@@ -9,8 +9,9 @@ import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 960;
+const DEFAULT_COLOR = "black";
 
-const fadeInAnimation = keyframes`
+const canvasFadeInAnimation = keyframes`
   from {
       transform: translateY(-25%);
       opacity: 0
@@ -21,8 +22,17 @@ const fadeInAnimation = keyframes`
   }
 `;
 
-const AnimatedRoot = styled.div`
-  animation: ${fadeInAnimation} ease-out 500ms 1;
+const toolbarFadeInAnimation = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const AnimatedCanvas = styled.div`
+  animation: ${canvasFadeInAnimation} ease-out 500ms 1;
 `;
 
 const StyledShadow = styled.div`
@@ -39,7 +49,22 @@ const StyledCanvas = styled.canvas`
   border-radius: 0.5rem;
 `;
 
+const AnimatedToolbar = styled.div`
+  animation: ${toolbarFadeInAnimation} 1.5s 1;
+`;
+
+const StyledColorPicker = styled.input.attrs({ type: "color" })`
+  background-color: white;
+  width: 4rem;
+  height: 4rem;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0.5rem;
+`;
+
 const Canvas = () => {
+  const [pickedColor, setPickedColor] = useState(DEFAULT_COLOR);
+  const pickedColorRef = useRef(pickedColor);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
@@ -48,8 +73,8 @@ const Canvas = () => {
     useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
-    const ctx = canvasRef.current as HTMLCanvasElement;
-    const rect = ctx.getBoundingClientRect();
+    const canvas = canvasRef.current as HTMLCanvasElement;
+    const rect = canvas.getBoundingClientRect();
     const posX = ev.clientX - rect.left;
     const posY = ev.clientY - rect.top;
     return [posX, posY];
@@ -100,7 +125,7 @@ const Canvas = () => {
         return;
       }
 
-      ctx.strokeStyle = "blue";
+      ctx.strokeStyle = pickedColorRef.current;
       ctx.lineWidth = 5;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -132,16 +157,26 @@ const Canvas = () => {
     };
   }, []);
 
+  useEffect(() => {
+    pickedColorRef.current = pickedColor;
+  }, [pickedColor]);
+
   return (
-    <Stack>
-      <AnimatedRoot>
+    <Stack gap={2} vertical>
+      <AnimatedCanvas>
         <StyledShadow />
         <StyledCanvas
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
           ref={canvasRef}
         />
-      </AnimatedRoot>
+      </AnimatedCanvas>
+      <AnimatedToolbar>
+        <StyledColorPicker
+          value={pickedColor}
+          onChange={(e) => setPickedColor(e.target.value)}
+        />
+      </AnimatedToolbar>
     </Stack>
   );
 };
