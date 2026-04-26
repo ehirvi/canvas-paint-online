@@ -7,10 +7,13 @@ import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 import type { TStrokeSegment } from "../../utils/protocol";
+import PenSvg from "../../assets/pen.svg";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
 const DEFAULT_COLOR = "#000000";
+const PEN_IMAGE = new Image();
+PEN_IMAGE.src = PenSvg;
 
 const canvasFadeInAnimation = keyframes`
   from {
@@ -45,9 +48,15 @@ const StyledShadow = styled.div`
   transform: translateY(0.5rem);
 `;
 
-const StyledCanvas = styled.canvas`
+const StyledPaintCanvas = styled.canvas`
+  position: absolute;
+  border-radius: 0.5rem;
+`;
+
+const StyledMouseCanvas = styled.canvas`
   position: relative;
   border-radius: 0.5rem;
+  pointer-events: none;
 `;
 
 const AnimatedToolbar = styled.div`
@@ -64,17 +73,25 @@ const StyledColorPicker = styled.input.attrs({ type: "color" })`
 `;
 
 const Canvas = () => {
+  const paintCanvasRef = useRef<HTMLCanvasElement>(null);
+  const paintCtxRef = useRef<CanvasRenderingContext2D>(null);
+
+  const mouseCanvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseCtxRef = useRef<CanvasRenderingContext2D>(null);
+
   const [pickedColor, setPickedColor] = useState(DEFAULT_COLOR);
   const pickedColorRef = useRef(pickedColor);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D>(null);
+
   const isMousePressedDown = useRef(false);
+
+  const currentPosRef = useRef<[number, number]>(null);
   const lastPosRef = useRef<[number, number]>(null);
+
   const { sendStrokeUpdate, getDrawQueue, pushToDrawQueue } =
     useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
-    const canvas = canvasRef.current as HTMLCanvasElement;
+    const canvas = paintCanvasRef.current as HTMLCanvasElement;
     const rect = canvas.getBoundingClientRect();
     const posX = ev.clientX - rect.left;
     const posY = ev.clientY - rect.top;
@@ -82,6 +99,8 @@ const Canvas = () => {
   };
 
   const onMouseMove = (pos: [number, number]) => {
+    currentPosRef.current = pos;
+
     if (!isMousePressedDown.current) {
       return;
     }
@@ -127,36 +146,53 @@ const Canvas = () => {
 
   const renderStrokes = () => {
     const queue = getDrawQueue();
-    const ctx = ctxRef.current as CanvasRenderingContext2D;
+
+    if (currentPosRef.current) {
+      const mouseCtx = mouseCtxRef.current as CanvasRenderingContext2D;
+      mouseCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      mouseCtx.drawImage(
+        PEN_IMAGE,
+        currentPosRef.current[0] - 5,
+        currentPosRef.current[1] - 25,
+        30,
+        30,
+      );
+    }
+
+    const paintCtx = paintCtxRef.current as CanvasRenderingContext2D;
+
     for (let i = 0; i < queue.length; i++) {
       const pos = queue[i];
       if (!pos) {
         return;
       }
 
-      ctx.strokeStyle = pos[4];
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.beginPath();
-      ctx.moveTo(pos[0], pos[1]);
-      ctx.lineTo(pos[2], pos[3]);
-      ctx.stroke();
+      paintCtx.strokeStyle = pos[4];
+      paintCtx.lineWidth = 5;
+      paintCtx.lineCap = "round";
+      paintCtx.lineJoin = "round";
+      paintCtx.beginPath();
+      paintCtx.moveTo(pos[0], pos[1]);
+      paintCtx.lineTo(pos[2], pos[3]);
+      paintCtx.stroke();
     }
     requestAnimationFrame(renderStrokes);
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const paintCanvas = paintCanvasRef.current;
+    const mouseCanvas = mouseCanvasRef.current;
     let frameId: number;
 
-    if (canvas) {
-      ctxRef.current = canvas.getContext("2d");
-      const ctx = ctxRef.current as CanvasRenderingContext2D;
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    if (paintCanvas && mouseCanvas) {
+      paintCtxRef.current = paintCanvas.getContext("2d");
+      mouseCtxRef.current = mouseCanvas.getContext("2d");
 
-      createEventListeners(canvas);
+      const paintCtx = paintCtxRef.current as CanvasRenderingContext2D;
+      paintCtx.fillStyle = "white";
+      paintCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      createEventListeners(paintCanvas);
     }
 
     frameId = requestAnimationFrame(renderStrokes);
@@ -174,10 +210,15 @@ const Canvas = () => {
     <Stack gap={2} vertical>
       <AnimatedCanvas>
         <StyledShadow />
-        <StyledCanvas
+        <StyledPaintCanvas
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
-          ref={canvasRef}
+          ref={paintCanvasRef}
+        />
+        <StyledMouseCanvas
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          ref={mouseCanvasRef}
         />
       </AnimatedCanvas>
       <AnimatedToolbar>
