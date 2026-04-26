@@ -1,10 +1,10 @@
 package protocol
 
 type SessionCreateResponse struct {
-	SessionID   string `json:"sessionId"`
-	AccessToken string `json:"accessToken"`
+	SessionID    string `json:"sessionId"`
+	SessionToken string `json:"sessionToken"`
 }
 
 type SessionJoinResponse struct {
-	AccessToken string `json:"accessToken"`
+	SessionToken string `json:"sessionToken"`
 }

@@ -22,7 +22,7 @@ type TransportContext struct {
 }
 
 func (t *TransportContext) handleUserAuthenticate(context *context.ApplicationContext, msg message.Message) {
-	claims := token.VerifyAccessToken(msg.Payload)
+	claims := token.VerifySessionToken(msg.Payload)
 	sessionId, err := uuid.Parse(claims.SessionID)
 	userId, _ := uuid.Parse(claims.UserID)
 	if err != nil {
