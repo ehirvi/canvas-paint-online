@@ -69,7 +69,7 @@ func (msg Message) ValidateStrokeSegment() error {
 	if lastPosX > 1280 || posX > 1280 {
 		return errors.New("Invalid message payload")
 	}
-	if lastPosY > 960 || posY > 960 {
+	if lastPosY > 720 || posY > 720 {
 		return errors.New("Invalid message payload")
 	}
 
