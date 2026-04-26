@@ -6,7 +6,7 @@ import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../utils/api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
-import type { TStrokePositionSegment } from "../../utils/protocol";
+import type { TStrokeSegment } from "../../utils/protocol";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 960;
@@ -70,7 +70,7 @@ const Canvas = () => {
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const isMousePressedDown = useRef(false);
   const lastPosRef = useRef<[number, number]>(null);
-  const { sendPositionUpdate, getDrawQueue, pushToDrawQueue } =
+  const { sendStrokeUpdate, getDrawQueue, pushToDrawQueue } =
     useWebTransportContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
@@ -91,7 +91,7 @@ const Canvas = () => {
       return;
     }
 
-    const payload: TStrokePositionSegment = [
+    const payload: TStrokeSegment = [
       lastPos[0],
       lastPos[1],
       pos[0],
@@ -99,7 +99,7 @@ const Canvas = () => {
       pickedColorRef.current,
     ];
     pushToDrawQueue(payload);
-    sendPositionUpdate(payload);
+    sendStrokeUpdate(payload);
 
     lastPosRef.current = pos;
   };

@@ -1,16 +1,16 @@
 export const EMessageType = {
   USER_AUTHENTICATE: 0x01,
   AUTHENTICATE_SUCCESS: 0x02,
-  STROKE_POSITION: 0x03,
+  STROKE_SEGMENT: 0x03,
 } as const;
 
 export type EMessageType = (typeof EMessageType)[keyof typeof EMessageType];
 
-export type TStrokePositionSegment = [number, number, number, number, string];
+export type TStrokeSegment = [number, number, number, number, string];
 
 export type TMessagePayload = {
   [EMessageType.USER_AUTHENTICATE]: string;
-  [EMessageType.STROKE_POSITION]: TStrokePositionSegment;
+  [EMessageType.STROKE_SEGMENT]: TStrokeSegment;
 };
 
 export interface IMessage {
@@ -46,8 +46,8 @@ const decodeBytesToString = (bytes: Uint8Array<ArrayBuffer>): string => {
   return string;
 };
 
-export const encodePositionToBytes = (
-  segment: TStrokePositionSegment,
+export const encodeStrokeSegmentToBytes = (
+  segment: TStrokeSegment,
 ): Uint8Array<ArrayBuffer> => {
   const color = encodeStringToBytes(segment[4]);
   const buffer = new ArrayBuffer(16 + color.length);
@@ -63,9 +63,9 @@ export const encodePositionToBytes = (
   return bytes;
 };
 
-export const decodePositionBytes = (
+export const decodeBytesToStrokeSegment = (
   bytes: Uint8Array<ArrayBuffer>,
-): TStrokePositionSegment => {
+): TStrokeSegment => {
   const view = new DataView(bytes.buffer);
 
   const lastPosX = view.getUint32(0);
