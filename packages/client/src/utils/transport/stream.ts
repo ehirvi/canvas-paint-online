@@ -4,9 +4,9 @@ import {
   type EMessageType,
 } from "../protocol";
 
-export const readFromStream = async (
+export const readStream = async (
   reader: ReadableStreamDefaultReader,
-  streamMessageHandler: (
+  messageReceiver: (
     type: EMessageType,
     payload: Uint8Array<ArrayBuffer>,
   ) => void,
@@ -28,17 +28,10 @@ export const readFromStream = async (
       const payload = msgBuf.out.slice(1);
 
       if (isValidMessageType(type)) {
-        streamMessageHandler(type, payload);
+        messageReceiver(type, payload);
       }
     }
   } finally {
     reader.releaseLock();
   }
-};
-
-export const writeToStream = async (
-  writer: WritableStreamDefaultWriter,
-  payload: Uint8Array<ArrayBuffer>,
-) => {
-  writer.write(payload);
 };

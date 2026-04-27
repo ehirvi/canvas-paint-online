@@ -1,12 +1,12 @@
 import {
   EMessageType,
+  encodeMousePositionToBytes,
   encodeProtocolMessage,
   encodeStringToBytes,
   encodeStrokeSegmentToBytes,
   type IMessage,
   type TMessagePayload,
 } from "../protocol";
-import { writeToStream } from "./stream";
 
 type TEncoderMap = {
   [K in keyof TMessagePayload]: (
@@ -17,9 +17,10 @@ type TEncoderMap = {
 const messagePayloadEncoderMap: TEncoderMap = {
   [EMessageType.USER_AUTHENTICATE]: encodeStringToBytes,
   [EMessageType.STROKE_SEGMENT]: encodeStrokeSegmentToBytes,
+  [EMessageType.MOUSE_POSITION]: encodeMousePositionToBytes,
 };
 
-export const streamMessageDispatcher = <T extends keyof TMessagePayload>(
+export const messageDispatcher = <T extends keyof TMessagePayload>(
   writer: WritableStreamDefaultWriter,
   type: T,
   payload: TMessagePayload[T],
@@ -32,5 +33,5 @@ export const streamMessageDispatcher = <T extends keyof TMessagePayload>(
     payload: bytes,
   };
   const protocolMessage = encodeProtocolMessage(message);
-  writeToStream(writer, protocolMessage);
+  writer.write(protocolMessage);
 };

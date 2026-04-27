@@ -13,6 +13,7 @@ export type TMousePosition = [number, number];
 export type TMessagePayload = {
   [EMessageType.USER_AUTHENTICATE]: string;
   [EMessageType.STROKE_SEGMENT]: TStrokeSegment;
+  [EMessageType.MOUSE_POSITION]: TMousePosition;
 };
 
 export interface IMessage {
@@ -78,6 +79,19 @@ export const decodeBytesToStrokeSegment = (
   const color = decodeBytesToString(bytes.slice(16));
 
   return [lastPosX, lastPosY, posX, posY, color];
+};
+
+export const encodeMousePositionToBytes = (
+  position: TMousePosition,
+): Uint8Array<ArrayBuffer> => {
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+
+  view.setUint32(0, position[0]);
+  view.setUint32(4, position[1]);
+
+  const bytes = new Uint8Array(buffer);
+  return bytes;
 };
 
 export const decodeBytesToMousePosition = (

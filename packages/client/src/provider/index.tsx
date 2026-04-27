@@ -6,14 +6,14 @@ import {
   type TMousePosition,
   type TStrokeSegment,
 } from "../utils/protocol";
-import { streamMessageDispatcher } from "../utils/transport/dispatcher";
+import { messageDispatcher } from "../utils/transport/dispatcher";
 import {
   createWebTransportConnection,
   setupWebTransportDatagrams,
   setupWebTransportStream,
 } from "../utils/transport/connection";
-import { readFromStream } from "../utils/transport/stream";
-import { dispatchDatagram, readDatagram } from "../utils/transport/datagram";
+import { readStream } from "../utils/transport/stream";
+import { readDatagram } from "../utils/transport/datagram";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;
@@ -64,7 +64,7 @@ export const WebTransportProvider = ({
     mousePoisitionRef.current = pos;
   };
 
-  const streamMessageHandler = (
+  const messageReceiver = (
     type: EMessageType,
     payload: Uint8Array<ArrayBuffer>,
   ) => {
@@ -82,7 +82,7 @@ export const WebTransportProvider = ({
   };
 
   const authenticateUser = (sessionToken: string) => {
-    streamMessageDispatcher(
+    messageDispatcher(
       streamWriterRef.current!,
       EMessageType.USER_AUTHENTICATE,
       sessionToken,
@@ -90,7 +90,7 @@ export const WebTransportProvider = ({
   };
 
   const sendStrokeUpdate = (segment: TStrokeSegment) => {
-    streamMessageDispatcher(
+    messageDispatcher(
       streamWriterRef.current!,
       EMessageType.STROKE_SEGMENT,
       segment,
@@ -98,7 +98,7 @@ export const WebTransportProvider = ({
   };
 
   const sendMouseUpdate = (position: TMousePosition) => {
-    dispatchDatagram(
+    messageDispatcher(
       datagramWriterRef.current!,
       EMessageType.MOUSE_POSITION,
       position,
@@ -134,8 +134,8 @@ export const WebTransportProvider = ({
 
     authenticateUser(sessionToken);
 
-    readFromStream(streamReaderRef.current, streamMessageHandler);
-    readDatagram(datagramReaderRef.current, streamMessageHandler);
+    readStream(streamReaderRef.current, messageReceiver);
+    readDatagram(datagramReaderRef.current, messageReceiver);
   };
 
   return (
