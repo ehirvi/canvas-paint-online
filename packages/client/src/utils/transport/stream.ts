@@ -1,8 +1,5 @@
-import {
-  decodeProtocolMessage,
-  isValidMessageType,
-  type EMessageType,
-} from "../protocol";
+import { isValidMessageType, type EMessageType } from "../protocol";
+import { decodeProtocolMessage } from "../protocol/decoders";
 
 export const readStream = async (
   reader: ReadableStreamDefaultReader,

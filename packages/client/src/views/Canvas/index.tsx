@@ -208,7 +208,7 @@ const Canvas = () => {
   }, [pickedColor]);
 
   return (
-    <Stack gap={2} vertical>
+    <Stack gap={1} vertical>
       <AnimatedCanvas>
         <StyledShadow />
         <StyledPaintCanvas
