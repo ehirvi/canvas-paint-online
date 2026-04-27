@@ -1,12 +1,10 @@
+import { EMessageType, type IMessage, type TMessagePayload } from "../protocol";
 import {
-  EMessageType,
   encodeMousePositionToBytes,
   encodeProtocolMessage,
   encodeStringToBytes,
   encodeStrokeSegmentToBytes,
-  type IMessage,
-  type TMessagePayload,
-} from "../protocol";
+} from "../protocol/encoders";
 
 type TEncoderMap = {
   [K in keyof TMessagePayload]: (

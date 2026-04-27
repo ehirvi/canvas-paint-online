@@ -1,7 +1,5 @@
 import { createContext, useRef, useState } from "react";
 import {
-  decodeBytesToMousePosition,
-  decodeBytesToStrokeSegment,
   EMessageType,
   type TMousePosition,
   type TStrokeSegment,
@@ -14,6 +12,10 @@ import {
 } from "../utils/transport/connection";
 import { readStream } from "../utils/transport/stream";
 import { readDatagram } from "../utils/transport/datagram";
+import {
+  decodeBytesToMousePosition,
+  decodeBytesToStrokeSegment,
+} from "../utils/protocol/decoders";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;
