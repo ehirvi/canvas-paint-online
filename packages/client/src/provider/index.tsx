@@ -1,15 +1,21 @@
 import { createContext, useRef, useState } from "react";
 import {
-  decodeBytesToStrokeSegment,
   EMessageType,
+  type TMousePosition,
   type TStrokeSegment,
 } from "../utils/protocol";
-import { streamMessageDispatcher } from "../utils/transport/dispatcher";
+import { messageDispatcher } from "../utils/transport/dispatcher";
 import {
   createWebTransportConnection,
+  setupWebTransportDatagrams,
   setupWebTransportStream,
 } from "../utils/transport/connection";
-import { readFromStream } from "../utils/transport/stream";
+import { readStream } from "../utils/transport/stream";
+import { readDatagram } from "../utils/transport/datagram";
+import {
+  decodeBytesToMousePosition,
+  decodeBytesToStrokeSegment,
+} from "../utils/protocol/decoders";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;
@@ -17,6 +23,8 @@ export interface IWebTransportContext {
   isAuthenticated: boolean;
   initWebTransport: (sessionToken: string) => void;
   sendStrokeUpdate: (segment: TStrokeSegment) => void;
+  sendMouseUpdate: (position: TMousePosition) => void;
+  getMousePositionUpdate: () => TMousePosition | null;
   getDrawQueue: () => Array<TStrokeSegment>;
   pushToDrawQueue: (segment: TStrokeSegment) => void;
 }
@@ -31,10 +39,16 @@ export const WebTransportProvider = ({
   children,
 }: IWebTransportProviderProps) => {
   const connectionRef = useRef<WebTransport>(null);
+
   const streamRef = useRef<WebTransportBidirectionalStream>(null);
-  const writerRef = useRef<WritableStreamDefaultWriter>(null);
-  const readerRef = useRef<ReadableStreamDefaultReader>(null);
+  const streamWriterRef = useRef<WritableStreamDefaultWriter>(null);
+  const streamReaderRef = useRef<ReadableStreamDefaultReader>(null);
+
+  const datagramWriterRef = useRef<WritableStreamDefaultWriter>(null);
+  const datagramReaderRef = useRef<ReadableStreamDefaultReader>(null);
+
   const drawQueueRef = useRef<Array<TStrokeSegment>>([]);
+  const mousePoisitionRef = useRef<TMousePosition>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
@@ -43,11 +57,16 @@ export const WebTransportProvider = ({
   };
 
   const strokeSegmentHandler = (payload: Uint8Array<ArrayBuffer>) => {
-    const pos = decodeBytesToStrokeSegment(payload);
-    drawQueueRef.current.push(pos);
+    const segment = decodeBytesToStrokeSegment(payload);
+    drawQueueRef.current.push(segment);
   };
 
-  const streamMessageHandler = (
+  const mousePositionHandler = (payload: Uint8Array<ArrayBuffer>) => {
+    const pos = decodeBytesToMousePosition(payload);
+    mousePoisitionRef.current = pos;
+  };
+
+  const messageReceiver = (
     type: EMessageType,
     payload: Uint8Array<ArrayBuffer>,
   ) => {
@@ -58,22 +77,33 @@ export const WebTransportProvider = ({
       case EMessageType.STROKE_SEGMENT:
         strokeSegmentHandler(payload);
         break;
+      case EMessageType.MOUSE_POSITION:
+        mousePositionHandler(payload);
+        break;
     }
   };
 
   const authenticateUser = (sessionToken: string) => {
-    streamMessageDispatcher(
-      writerRef.current!,
+    messageDispatcher(
+      streamWriterRef.current!,
       EMessageType.USER_AUTHENTICATE,
       sessionToken,
     );
   };
 
   const sendStrokeUpdate = (segment: TStrokeSegment) => {
-    streamMessageDispatcher(
-      writerRef.current!,
+    messageDispatcher(
+      streamWriterRef.current!,
       EMessageType.STROKE_SEGMENT,
       segment,
+    );
+  };
+
+  const sendMouseUpdate = (position: TMousePosition) => {
+    messageDispatcher(
+      datagramWriterRef.current!,
+      EMessageType.MOUSE_POSITION,
+      position,
     );
   };
 
@@ -81,6 +111,10 @@ export const WebTransportProvider = ({
     const queue = drawQueueRef.current;
     drawQueueRef.current = [];
     return queue;
+  };
+
+  const getMousePositionUpdate = () => {
+    return mousePoisitionRef.current;
   };
 
   const pushToDrawQueue = (segment: TStrokeSegment) => {
@@ -93,12 +127,17 @@ export const WebTransportProvider = ({
 
     const stream = await setupWebTransportStream(wt);
     streamRef.current = stream;
+    streamWriterRef.current = stream.writable.getWriter();
+    streamReaderRef.current = stream.readable.getReader();
 
-    writerRef.current = stream.writable.getWriter();
-    readerRef.current = stream.readable.getReader();
+    const datagrams = setupWebTransportDatagrams(wt);
+    datagramWriterRef.current = datagrams.writable.getWriter();
+    datagramReaderRef.current = datagrams.readable.getReader();
 
     authenticateUser(sessionToken);
-    await readFromStream(readerRef.current, streamMessageHandler);
+
+    readStream(streamReaderRef.current, messageReceiver);
+    readDatagram(datagramReaderRef.current, messageReceiver);
   };
 
   return (
@@ -109,7 +148,9 @@ export const WebTransportProvider = ({
         isAuthenticated,
         initWebTransport,
         sendStrokeUpdate,
+        sendMouseUpdate,
         getDrawQueue,
+        getMousePositionUpdate,
         pushToDrawQueue,
       }}
     >

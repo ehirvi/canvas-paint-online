@@ -14,6 +14,7 @@ const (
 	UserAuthenticate    MessageType = 0x01
 	AuthenticateSuccess MessageType = 0x02
 	StrokeSegment       MessageType = 0x03
+	MousePosition       MessageType = 0x04
 )
 
 type Message struct {
@@ -52,6 +53,17 @@ func DecodeMessage(stream *webtransport.Stream) (*Message, error) {
 	msg.Type = MessageType(data[0])
 	msg.Payload = data[1:]
 
+	return msg, nil
+}
+
+func DecodeDatagram(datagram []byte) (*Message, error) {
+	if len(datagram) == 0 {
+		return nil, nil
+	}
+
+	msg := &Message{}
+	msg.Type = MessageType(datagram[4])
+	msg.Payload = datagram[5:]
 	return msg, nil
 }
 

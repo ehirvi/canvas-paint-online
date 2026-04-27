@@ -1,4 +1,4 @@
-package context
+package application
 
 import (
 	"online-canvas-paint-server/internal/session"

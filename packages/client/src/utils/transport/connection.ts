@@ -15,3 +15,7 @@ export const setupWebTransportStream = async (
   const stream = await wt.createBidirectionalStream();
   return stream;
 };
+
+export const setupWebTransportDatagrams = (wt: WebTransport) => {
+  return wt.datagrams;
+};

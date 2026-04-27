@@ -1,7 +1,7 @@
 package main
 
 import (
-	"online-canvas-paint-server/internal/context"
+	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/server"
 
 	"github.com/joho/godotenv"
@@ -9,6 +9,6 @@ import (
 
 func main() {
 	godotenv.Load()
-	applicationContext := context.CreateApplicationContext()
+	applicationContext := application.CreateApplicationContext()
 	server.InitializeServer(applicationContext)
 }
