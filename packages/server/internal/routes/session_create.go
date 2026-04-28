@@ -12,10 +12,10 @@ import (
 var SessionCreate = Route{
 	Path:   "/session/create",
 	Method: HttpMethod(Post),
-	Handler: func(context *application.ApplicationContext, w http.ResponseWriter, r *http.Request) {
-		sessionId := context.SessionManager.CreateSession()
-		user := context.UserManager.CreateUser(user.Host)
-		context.SessionManager.JoinSession(sessionId, user)
+	Handler: func(app *application.Application, w http.ResponseWriter, r *http.Request) {
+		sessionId := app.SessionManager.CreateSession()
+		user := app.UserManager.CreateUser(user.Host)
+		app.SessionManager.JoinSession(sessionId, user)
 		token := token.CreateSessionToken(user, sessionId)
 
 		res := protocol.SessionCreateResponse{

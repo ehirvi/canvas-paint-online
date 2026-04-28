@@ -23,17 +23,17 @@ type TransportContext struct {
 	CanvasSession       *session.Session
 }
 
-func (t *TransportContext) handleUserAuthenticate(context *application.ApplicationContext, msg message.Message) {
+func (t *TransportContext) handleUserAuthenticate(app *application.Application, msg message.Message) {
 	claims := token.VerifySessionToken(msg.Payload)
 	sessionId, err := uuid.Parse(claims.SessionID)
 	userId, _ := uuid.Parse(claims.UserID)
 	if err != nil {
 		fmt.Printf("uuid err: %s\n", err)
 	}
-	context.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
+	app.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
 
-	session := context.SessionManager.GetSession(sessionId)
-	user := context.UserManager.GetUser(userId)
+	session := app.SessionManager.GetSession(sessionId)
+	user := app.UserManager.GetUser(userId)
 	t.CanvasSession = session
 	t.User = user
 
@@ -64,14 +64,14 @@ func (t *TransportContext) handleMousePosition(msg message.Message) {
 	}
 }
 
-func (t *TransportContext) parseMessage(context *application.ApplicationContext, msg *message.Message) {
+func (t *TransportContext) parseMessage(app *application.Application, msg *message.Message) {
 	if msg == nil {
 		return
 	}
 
 	switch msg.Type {
 	case message.UserAuthenticate:
-		t.handleUserAuthenticate(context, *msg)
+		t.handleUserAuthenticate(app, *msg)
 
 	case message.StrokeSegment:
 		t.handleStrokeSegmentUpdate(*msg)
@@ -113,12 +113,12 @@ func (t *TransportContext) readStreamMessage() (*message.Message, error) {
 	return msg, nil
 }
 
-func (t *TransportContext) handleStream(context *application.ApplicationContext) {
+func (t *TransportContext) handleStream(app *application.Application) {
 	defer t.WebTransportStream.Close()
 
 	for {
 		msg, _ := t.readStreamMessage()
-		t.parseMessage(context, msg)
+		t.parseMessage(app, msg)
 	}
 }
 
@@ -133,15 +133,15 @@ func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, 
 	return msg, nil
 }
 
-func (t *TransportContext) handleDatagrams(appCtx *application.ApplicationContext) {
-	ctx := context.Background()
+func (t *TransportContext) handleDatagrams(app *application.Application) {
+	context := context.Background()
 	for {
-		msg, _ := t.readDatagram(ctx)
-		t.parseMessage(appCtx, msg)
+		msg, _ := t.readDatagram(context)
+		t.parseMessage(app, msg)
 	}
 }
 
-func UpgradeToWebTransportSession(context *application.ApplicationContext, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
+func UpgradeToWebTransportSession(app *application.Application, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
 	sess, err := wtServer.Upgrade(w, r)
 	if err != nil {
 		log.Printf("upgrading failed: %s", err)
@@ -157,10 +157,10 @@ func UpgradeToWebTransportSession(context *application.ApplicationContext, wtSer
 		}
 
 		t.WebTransportStream = stream
-		t.handleStream(context)
+		t.handleStream(app)
 	}()
 
 	go func() {
-		t.handleDatagrams(context)
+		t.handleDatagrams(app)
 	}()
 }

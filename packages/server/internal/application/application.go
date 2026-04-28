@@ -5,13 +5,13 @@ import (
 	"online-canvas-paint-server/internal/user"
 )
 
-type ApplicationContext struct {
+type Application struct {
 	SessionManager *session.Manager
 	UserManager    *user.Manager
 }
 
-func CreateApplicationContext() *ApplicationContext {
+func CreateApplication() *Application {
 	sessionManager := session.NewManager()
 	userManager := user.NewManager()
-	return &ApplicationContext{SessionManager: sessionManager, UserManager: userManager}
+	return &Application{SessionManager: sessionManager, UserManager: userManager}
 }

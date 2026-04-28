@@ -13,7 +13,7 @@ import (
 var SessionJoin = Route{
 	Path:   "/session/{sessionID}/join",
 	Method: HttpMethod(Post),
-	Handler: func(context *application.ApplicationContext, w http.ResponseWriter, r *http.Request) {
+	Handler: func(app *application.Application, w http.ResponseWriter, r *http.Request) {
 		sessionID := r.PathValue("sessionID")
 		parsedID, err := uuid.Parse(sessionID)
 		if err != nil {
@@ -21,7 +21,7 @@ var SessionJoin = Route{
 			return
 		}
 
-		session := context.SessionManager.GetSession(parsedID)
+		session := app.SessionManager.GetSession(parsedID)
 		if session == nil {
 			SendErrorResponse(w, "No session found", http.StatusNotFound)
 			return
@@ -32,8 +32,8 @@ var SessionJoin = Route{
 			return
 		}
 
-		user := context.UserManager.CreateUser(user.Guest)
-		context.SessionManager.JoinSession(session.ID, user)
+		user := app.UserManager.CreateUser(user.Guest)
+		app.SessionManager.JoinSession(session.ID, user)
 		token := token.CreateSessionToken(user, session.ID)
 
 		res := protocol.SessionJoinResponse{

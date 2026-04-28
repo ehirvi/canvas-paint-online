@@ -26,21 +26,21 @@ func createWebTransportServer(h3Server *http3.Server) *webtransport.Server {
 	return wtServer
 }
 
-func createHttpRoutes(context *application.ApplicationContext, mux *http.ServeMux) {
+func createHttpRoutes(app *application.Application, mux *http.ServeMux) {
 	routes := routes.GetRoutes()
 	for _, route := range routes {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			CorsHandler(w, r)
-			route.Handler(context, w, r)
+			route.Handler(app, w, r)
 		})
 	}
 }
 
-func createWebTransportRoute(context *application.ApplicationContext, wtServer *webtransport.Server, mux *http.ServeMux) {
+func createWebTransportRoute(app *application.Application, wtServer *webtransport.Server, mux *http.ServeMux) {
 	pattern := fmt.Sprintf("%s /session/wt", http.MethodConnect)
 	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		transport.UpgradeToWebTransportSession(context, wtServer, w, r)
+		transport.UpgradeToWebTransportSession(app, wtServer, w, r)
 	})
 }
 
@@ -54,15 +54,15 @@ func serveWebTransportServer(server *webtransport.Server, certFile string, keyFi
 	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
 }
 
-func InitializeServer(context *application.ApplicationContext) {
+func InitializeServer(app *application.Application) {
 	certFile := "localhost.pem"
 	keyFile := "localhost-key.pem"
 
 	h3Server, mux := createHttp3Server()
 	wtServer := createWebTransportServer(h3Server)
 
-	createHttpRoutes(context, mux)
-	createWebTransportRoute(context, wtServer, mux)
+	createHttpRoutes(app, mux)
+	createWebTransportRoute(app, wtServer, mux)
 
 	fmt.Printf("\nServer running on %s\n\n", h3Server.Addr)
 	serveHttpFallbackServer(h3Server, certFile, keyFile)

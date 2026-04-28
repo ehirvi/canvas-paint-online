@@ -9,7 +9,7 @@ import (
 var Health = Route{
 	Path:   "/health",
 	Method: HttpMethod(Get),
-	Handler: func(_ *application.ApplicationContext, w http.ResponseWriter, r *http.Request) {
+	Handler: func(_ *application.Application, w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "ok")
 	},
 }
