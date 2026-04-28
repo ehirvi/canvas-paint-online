@@ -18,12 +18,14 @@ func (t *TransportContext) handleUserAuthenticate(app *application.Application, 
 	if err != nil {
 		fmt.Printf("uuid err: %s\n", err)
 	}
-	app.SessionManager.AddWebTransportSessionToUser(sessionID, userID, t.WebTransportSession, t.WebTransportStream)
+
+	user := app.UserManager.GetUser(userID)
+	user.Session = t.WebTransportSession
+	user.Stream = t.WebTransportStream
+	t.UserID = user.ID
 
 	sess := app.SessionManager.GetSession(sessionID)
-	user := app.UserManager.GetUser(userID)
 	t.CanvasSession = sess
-	t.UserID = user.ID
 
 	DispatchAuthSuccessMsg(user, true)
 }

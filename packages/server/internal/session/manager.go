@@ -5,7 +5,6 @@ import (
 	"online-canvas-paint-server/internal/user"
 
 	"github.com/google/uuid"
-	"github.com/quic-go/webtransport-go"
 )
 
 type Manager struct {
@@ -30,10 +29,4 @@ func (m *Manager) GetSession(id common.ID) *Session {
 func (m *Manager) JoinSession(sessID common.ID, user *user.User) {
 	sess := m.GetSession(sessID)
 	sess.Users[user.ID] = user
-}
-
-func (m *Manager) AddWebTransportSessionToUser(sessionID common.ID, userID common.ID, wtSess *webtransport.Session, wtStream *webtransport.Stream) {
-	sess := m.GetSession(sessionID)
-	sess.Users[userID].Session = wtSess
-	sess.Users[userID].Stream = wtStream
 }
