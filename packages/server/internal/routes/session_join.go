@@ -21,20 +21,20 @@ var SessionJoin = Route{
 			return
 		}
 
-		session := app.SessionManager.GetSession(parsedID)
-		if session == nil {
+		sess := app.SessionManager.GetSession(parsedID)
+		if sess == nil {
 			SendErrorResponse(w, "No session found", http.StatusNotFound)
 			return
 		}
 
-		if len(session.Users) == 2 {
+		if len(sess.Users) == 2 {
 			SendErrorResponse(w, "Session has maximum amount of users", http.StatusForbidden)
 			return
 		}
 
 		user := app.UserManager.CreateUser(user.Guest)
-		app.SessionManager.JoinSession(session.ID, user)
-		token := token.CreateSessionToken(user, session.ID)
+		app.SessionManager.JoinSession(sess.ID, user)
+		token := token.CreateSessionToken(user, sess.ID)
 
 		res := protocol.SessionJoinResponse{
 			SessionToken: token,

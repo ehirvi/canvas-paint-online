@@ -11,7 +11,7 @@ type Application struct {
 }
 
 func CreateApplication() *Application {
-	sessionManager := session.NewManager()
+	sessManager := session.NewManager()
 	userManager := user.NewManager()
-	return &Application{SessionManager: sessionManager, UserManager: userManager}
+	return &Application{SessionManager: sessManager, UserManager: userManager}
 }

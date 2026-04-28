@@ -11,6 +11,6 @@ func SendJsonResponse(w http.ResponseWriter, body any, statusCode int) {
 	json.NewEncoder(w).Encode(body)
 }
 
-func SendErrorResponse(w http.ResponseWriter, errorMessage string, statusCode int) {
-	http.Error(w, errorMessage, statusCode)
+func SendErrorResponse(w http.ResponseWriter, errMsg string, statusCode int) {
+	http.Error(w, errMsg, statusCode)
 }

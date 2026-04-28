@@ -25,16 +25,16 @@ type TransportContext struct {
 
 func (t *TransportContext) handleUserAuthenticate(app *application.Application, msg message.Message) {
 	claims := token.VerifySessionToken(msg.Payload)
-	sessionId, err := uuid.Parse(claims.SessionID)
-	userId, _ := uuid.Parse(claims.UserID)
+	sessionID, err := uuid.Parse(claims.SessionID)
+	userID, _ := uuid.Parse(claims.UserID)
 	if err != nil {
 		fmt.Printf("uuid err: %s\n", err)
 	}
-	app.SessionManager.AddWebTransportSessionToUser(sessionId, userId, t.WebTransportSession, t.WebTransportStream)
+	app.SessionManager.AddWebTransportSessionToUser(sessionID, userID, t.WebTransportSession, t.WebTransportStream)
 
-	session := app.SessionManager.GetSession(sessionId)
-	user := app.UserManager.GetUser(userId)
-	t.CanvasSession = session
+	sess := app.SessionManager.GetSession(sessionID)
+	user := app.UserManager.GetUser(userID)
+	t.CanvasSession = sess
 	t.User = user
 
 	authSuccessMsg := constructAuthSuccessMsg(true)
@@ -104,8 +104,8 @@ func constructMousePositionMsg(payload []byte) message.Message {
 }
 
 func sendStreamMessage(s *webtransport.Stream, payload message.Message) {
-	encodedPayload := message.EncodeMessage(payload)
-	s.Write(encodedPayload)
+	bytes := message.EncodeMessage(payload)
+	s.Write(bytes)
 }
 
 func (t *TransportContext) readStreamMessage() (*message.Message, error) {
@@ -123,8 +123,8 @@ func (t *TransportContext) handleStream(app *application.Application) {
 }
 
 func sendDatagram(s *webtransport.Session, payload message.Message) {
-	encodedPayload := message.EncodeMessage(payload)
-	s.SendDatagram(encodedPayload)
+	bytes := message.EncodeMessage(payload)
+	s.SendDatagram(bytes)
 }
 
 func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, error) {
@@ -134,15 +134,15 @@ func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, 
 }
 
 func (t *TransportContext) handleDatagrams(app *application.Application) {
-	context := context.Background()
+	ctx := context.Background()
 	for {
-		msg, _ := t.readDatagram(context)
+		msg, _ := t.readDatagram(ctx)
 		t.parseMessage(app, msg)
 	}
 }
 
-func UpgradeToWebTransportSession(app *application.Application, wtServer *webtransport.Server, w http.ResponseWriter, r *http.Request) {
-	sess, err := wtServer.Upgrade(w, r)
+func UpgradeToWebTransportSession(app *application.Application, wt *webtransport.Server, w http.ResponseWriter, r *http.Request) {
+	sess, err := wt.Upgrade(w, r)
 	if err != nil {
 		log.Printf("upgrading failed: %s", err)
 		w.WriteHeader(500)
