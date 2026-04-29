@@ -14,7 +14,7 @@ export const readDatagram = async (
         break;
       }
       const datagram = value as Uint8Array;
-      const type = datagram.slice(4, 5)[0];
+      const type = datagram[0];
       const payload = datagram.slice(5);
 
       if (isValidMessageType(type)) {

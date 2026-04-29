@@ -42,11 +42,11 @@ export const encodeProtocolMessage = (
   message: IMessage,
 ): Uint8Array<ArrayBuffer> => {
   const { length, type, payload } = message;
-  const buffer = new ArrayBuffer(4 + length);
+  const buffer = new ArrayBuffer(1 + 4 + length);
   const view = new DataView(buffer);
 
-  view.setUint32(0, length);
-  view.setUint8(4, type);
+  view.setUint8(0, type);
+  view.setUint32(1, length);
 
   const protocolMsg = new Uint8Array(buffer);
   protocolMsg.set(payload, 5);

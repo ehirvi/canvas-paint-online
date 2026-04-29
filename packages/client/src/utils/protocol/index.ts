@@ -18,13 +18,13 @@ export type TMessagePayload = {
 
 export interface IMessage {
   /**
-   * 4 bytes
-   */
-  length: number;
-  /**
    * 1 byte
    */
   type: EMessageType;
+  /**
+   * 4 bytes
+   */
+  length: number;
   /**
    * Variable size
    */

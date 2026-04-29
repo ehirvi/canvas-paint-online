@@ -11,18 +11,26 @@ export const readStream = async (
   let buffer = new Uint8Array(0);
   try {
     while (true) {
-      const lenBuf = await decodeProtocolMessage(reader, buffer, 4);
+      const typeBuf = await decodeProtocolMessage(reader, buffer, 1);
+
+      if (!typeBuf) return;
+
+      const lenBuf = await decodeProtocolMessage(reader, typeBuf.buffer, 4);
 
       if (!lenBuf) return;
 
       const length = new DataView(lenBuf.out.buffer).getUint32(0);
 
-      const msgBuf = await decodeProtocolMessage(reader, lenBuf.buffer, length);
+      const payloadBuf = await decodeProtocolMessage(
+        reader,
+        lenBuf.buffer,
+        length,
+      );
 
-      if (!msgBuf) return;
+      if (!payloadBuf) return;
 
-      const type = msgBuf.out[0];
-      const payload = msgBuf.out.slice(1);
+      const type = typeBuf.out[0];
+      const payload = payloadBuf.out;
 
       if (isValidMessageType(type)) {
         messageReceiver(type, payload);

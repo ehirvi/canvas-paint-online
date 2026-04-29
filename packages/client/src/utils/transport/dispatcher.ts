@@ -26,8 +26,8 @@ export const messageDispatcher = <T extends keyof TMessagePayload>(
   const encoder = messagePayloadEncoderMap[type];
   const bytes = encoder(payload);
   const message: IMessage = {
-    length: 1 + bytes.length,
     type,
+    length: bytes.length,
     payload: bytes,
   };
   const protocolMessage = encodeProtocolMessage(message);
