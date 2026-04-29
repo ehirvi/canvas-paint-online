@@ -9,6 +9,6 @@ import (
 
 func main() {
 	godotenv.Load()
-	applicationContext := application.CreateApplicationContext()
-	server.InitializeServer(applicationContext)
+	app := application.CreateApplication()
+	server.InitializeServer(app)
 }

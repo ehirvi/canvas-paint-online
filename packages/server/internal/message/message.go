@@ -18,16 +18,17 @@ const (
 )
 
 type Message struct {
-	Length  [4]byte
 	Type    MessageType
+	Length  uint32
 	Payload []byte
 }
 
 func EncodeMessage(msg Message) []byte {
-	length := 1 + len(msg.Payload)
-	buf := make([]byte, 4+length)
-	binary.BigEndian.PutUint32(buf[0:4], uint32(length))
-	buf[4] = byte(msg.Type)
+	bufLen := 1 + 4 + msg.Length
+	buf := make([]byte, bufLen)
+
+	buf[0] = byte(msg.Type)
+	binary.BigEndian.PutUint32(buf[1:5], msg.Length)
 	copy(buf[5:], msg.Payload)
 
 	return buf
@@ -35,35 +36,44 @@ func EncodeMessage(msg Message) []byte {
 
 func DecodeMessage(stream *webtransport.Stream) (*Message, error) {
 	msg := &Message{}
-	lengthBuf := msg.Length
-	_, err := io.ReadFull(stream, lengthBuf[:])
-	if err != nil {
-		return nil, err
+
+	typeBuf := make([]byte, 1)
+	_, typeErr := io.ReadFull(stream, typeBuf[:])
+	if typeErr != nil {
+		return nil, typeErr
 	}
+	msgType := typeBuf[0]
 
-	length := binary.BigEndian.Uint32(lengthBuf[:])
-
-	data := make([]byte, length)
-	_, err = io.ReadFull(stream, data)
-
-	if err != nil {
-		return nil, err
+	lenBuf := make([]byte, 4)
+	_, lenErr := io.ReadFull(stream, lenBuf[:])
+	if lenErr != nil {
+		return nil, lenErr
 	}
+	msgLength := binary.BigEndian.Uint32(lenBuf[:])
 
-	msg.Type = MessageType(data[0])
-	msg.Payload = data[1:]
+	payloadBuf := make([]byte, msgLength)
+	_, payloadErr := io.ReadFull(stream, payloadBuf)
+	if payloadErr != nil {
+		return nil, payloadErr
+	}
+	msgPayload := payloadBuf[:]
+
+	msg.Type = MessageType(msgType)
+	msg.Length = msgLength
+	msg.Payload = msgPayload
 
 	return msg, nil
 }
 
-func DecodeDatagram(datagram []byte) (*Message, error) {
-	if len(datagram) == 0 {
+func DecodeDatagram(payload []byte) (*Message, error) {
+	if len(payload) == 0 {
 		return nil, nil
 	}
 
 	msg := &Message{}
-	msg.Type = MessageType(datagram[4])
-	msg.Payload = datagram[5:]
+	msg.Type = MessageType(payload[0])
+	msg.Length = binary.BigEndian.Uint32(payload[1:5])
+	msg.Payload = payload[5:]
 	return msg, nil
 }
 

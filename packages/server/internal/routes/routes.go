@@ -15,7 +15,7 @@ const (
 type Route struct {
 	Path    string
 	Method  HttpMethod
-	Handler func(*application.ApplicationContext, http.ResponseWriter, *http.Request)
+	Handler func(*application.Application, http.ResponseWriter, *http.Request)
 }
 
 var routes = []Route{Health, SessionCreate, SessionJoin}
