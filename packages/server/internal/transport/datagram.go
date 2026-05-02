@@ -9,8 +9,16 @@ import (
 )
 
 func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, error) {
-	bytes, _ := t.WebTransportSession.ReceiveDatagram(ctx)
-	msg, _ := message.DecodeDatagram(bytes)
+	bytes, datagramErr := t.WebTransportSession.ReceiveDatagram(ctx)
+	if datagramErr != nil {
+		return nil, datagramErr
+	}
+
+	msg, decodeErr := message.DecodeDatagram(bytes)
+	if decodeErr != nil {
+		return nil, decodeErr
+	}
+
 	return msg, nil
 }
 
@@ -22,7 +30,13 @@ func WriteDatagram(s *webtransport.Session, payload message.Message) {
 func (t *TransportContext) handleDatagrams(app *application.Application) {
 	ctx := context.Background()
 	for {
-		msg, _ := t.readDatagram(ctx)
+		msg, err := t.readDatagram(ctx)
+
+		if err != nil {
+			t.WebTransportSession.CloseWithError(400, "Session closed")
+			return
+		}
+
 		t.ReceiveMessage(app, msg)
 	}
 }
