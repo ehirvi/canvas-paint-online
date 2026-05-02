@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Home } from "./views/Home";
 import { CanvasWrapper } from "./views/Canvas";
-import { EAppRoutes } from "./utils/routes";
+import { EAppRoutes } from "./routes";
 import { WebTransportProvider } from "./provider";
 
 function App() {

@@ -3,19 +3,19 @@ import {
   EMessageType,
   type TMousePosition,
   type TStrokeSegment,
-} from "../utils/protocol";
-import { messageDispatcher } from "../utils/transport/dispatcher";
+} from "../protocol";
+import {
+  decodeBytesToMousePosition,
+  decodeBytesToStrokeSegment,
+} from "../protocol/decoders";
+import { messageDispatcher } from "../transport/dispatcher";
 import {
   createWebTransportConnection,
   setupWebTransportDatagrams,
   setupWebTransportStream,
-} from "../utils/transport/connection";
-import { readStream } from "../utils/transport/stream";
-import { readDatagram } from "../utils/transport/datagram";
-import {
-  decodeBytesToMousePosition,
-  decodeBytesToStrokeSegment,
-} from "../utils/protocol/decoders";
+} from "../transport/connection";
+import { readStream } from "../transport/stream";
+import { readDatagram } from "../transport/datagram";
 
 export interface IWebTransportContext {
   connection: WebTransport | null;

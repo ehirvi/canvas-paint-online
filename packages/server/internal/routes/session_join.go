@@ -36,7 +36,7 @@ var SessionJoin = Route{
 		app.SessionManager.JoinSession(sess.ID, user)
 		token := token.CreateSessionToken(user, sess.ID)
 
-		res := protocol.SessionJoinResponse{
+		res := protocol.SessionResponse{
 			SessionToken: token,
 		}
 

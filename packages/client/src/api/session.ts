@@ -1,7 +1,7 @@
-import { appConfig } from "../config";
+import { appConfig } from "../utils/config";
 import { EApiEndpoint } from "./endpoints";
-import { isSessionCreateResponse, isSessionJoinResponse } from "./typeguards";
-import type { ISessionCreateResponse, ISessionJoinResponse } from "./types";
+import { isSessionResponse } from "./typeguards";
+import type { ISessionResponse } from "./types";
 
 const serverPost = ({
   url,
@@ -20,23 +20,23 @@ const serverPost = ({
 };
 
 export const createSession = async (): Promise<
-  ISessionCreateResponse | undefined
+  ISessionResponse | undefined
 > => {
   const url = appConfig.API_URL + EApiEndpoint.SESSION_CREATE;
 
   const res = await serverPost({ url });
   const body = await res.json();
 
-  if (isSessionCreateResponse(body)) {
-    return body;
+  if (!isSessionResponse(body)) {
+    return;
   }
 
-  return;
+  return body;
 };
 
 export const joinSession = async (
   sessionId: string,
-): Promise<ISessionJoinResponse | undefined> => {
+): Promise<ISessionResponse | undefined> => {
   const url =
     appConfig.API_URL +
     EApiEndpoint.SESSION_JOIN.replace(":sessionId", sessionId);
@@ -44,9 +44,9 @@ export const joinSession = async (
   const res = await serverPost({ url });
   const body = await res.json();
 
-  if (isSessionJoinResponse(body)) {
-    return body;
+  if (!isSessionResponse(body)) {
+    return;
   }
 
-  return;
+  return body;
 };

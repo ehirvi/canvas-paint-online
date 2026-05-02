@@ -18,8 +18,7 @@ var SessionCreate = Route{
 		app.SessionManager.JoinSession(sessionID, user)
 		token := token.CreateSessionToken(user, sessionID)
 
-		res := protocol.SessionCreateResponse{
-			SessionID:    sessionID.String(),
+		res := protocol.SessionResponse{
 			SessionToken: token,
 		}
 
