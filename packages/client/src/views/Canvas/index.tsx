@@ -84,7 +84,6 @@ const Canvas = () => {
 
   const isMousePressedDown = useRef(false);
 
-  const currentPosRef = useRef<[number, number]>(null);
   const lastPosRef = useRef<[number, number]>(null);
 
   const {
@@ -97,13 +96,12 @@ const Canvas = () => {
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const canvas = paintCanvasRef.current as HTMLCanvasElement;
     const rect = canvas.getBoundingClientRect();
-    const posX = ev.clientX - rect.left;
-    const posY = ev.clientY - rect.top;
+    const posX = Math.round(ev.clientX - rect.left);
+    const posY = Math.round(ev.clientY - rect.top);
     return [posX, posY];
   };
 
   const onMouseMove = (pos: [number, number]) => {
-    currentPosRef.current = pos;
     updateMousePosition(pos);
 
     if (!isMousePressedDown.current) {
