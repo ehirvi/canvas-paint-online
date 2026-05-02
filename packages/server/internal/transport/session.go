@@ -24,7 +24,7 @@ func UpgradeToWebTransportSession(app *application.Application, wt *webtransport
 		return
 	}
 
-	t := TransportContext{WebTransportSession: sess}
+	t := &TransportContext{WebTransportSession: sess}
 
 	go t.HandleStream(app)
 

@@ -20,8 +20,9 @@ func (t *TransportContext) handleUserAuthenticate(app *application.Application, 
 	}
 
 	user := app.UserManager.GetUser(userID)
-	user.Session = t.WebTransportSession
-	user.Stream = t.WebTransportStream
+	app.UserManager.AddWebTransportSessionToUser(user, t.WebTransportSession)
+	app.UserManager.AddWebTransportStreamToUser(user, t.WebTransportStream)
+
 	t.UserID = user.ID
 
 	sess := app.SessionManager.GetSession(sessionID)
