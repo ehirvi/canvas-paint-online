@@ -1,9 +1,3 @@
-export interface ISessionCreateResponse {
-  sessionId: string;
+export interface ISessionResponse {
   sessionToken: string;
 }
-
-export interface ISessionJoinResponse extends Omit<
-  ISessionCreateResponse,
-  "sessionId"
-> {}
