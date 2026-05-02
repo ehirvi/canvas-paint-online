@@ -1,10 +1,5 @@
 package protocol
 
-type SessionCreateResponse struct {
-	SessionID    string `json:"sessionId"`
-	SessionToken string `json:"sessionToken"`
-}
-
-type SessionJoinResponse struct {
+type SessionResponse struct {
 	SessionToken string `json:"sessionToken"`
 }
