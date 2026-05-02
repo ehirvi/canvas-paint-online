@@ -1,160 +1,72 @@
-import { createContext, useRef, useState } from "react";
-import {
-  EMessageType,
-  type TMousePosition,
-  type TStrokeSegment,
-} from "../protocol";
-import {
-  decodeBytesToMousePosition,
-  decodeBytesToStrokeSegment,
-} from "../protocol/decoders";
-import { messageDispatcher } from "../transport/dispatcher";
-import {
-  createWebTransportConnection,
-  setupWebTransportDatagrams,
-  setupWebTransportStream,
-} from "../transport/connection";
-import { readStream } from "../transport/stream";
-import { readDatagram } from "../transport/datagram";
+import { createContext, useContext, useRef, useState } from "react";
+import { type TMousePosition, type TStrokeSegment } from "../protocol";
 
-export interface IWebTransportContext {
-  connection: WebTransport | null;
-  bidirStream: WebTransportBidirectionalStream | null;
+import { useWebTransportConnection } from "../hooks/useWebTransportConnection";
+
+interface IApplicationContext {
   isAuthenticated: boolean;
-  initWebTransport: (sessionToken: string) => void;
-  sendStrokeUpdate: (segment: TStrokeSegment) => void;
-  sendMouseUpdate: (position: TMousePosition) => void;
-  getMousePositionUpdate: () => TMousePosition | null;
-  getDrawQueue: () => Array<TStrokeSegment>;
-  pushToDrawQueue: (segment: TStrokeSegment) => void;
+  initTransport: (sessionToken: string) => void;
+  updateStrokeSegmentQueue: (segment: TStrokeSegment) => void;
+  updateMousePosition: (position: TMousePosition) => void;
+  getStrokeSegmentQueue: () => Array<TStrokeSegment>;
+  getPeerMousePosition: () => TMousePosition | null;
 }
 
-export const WebTransportContext = createContext<IWebTransportContext | null>(
-  null,
-);
+const ApplicationContext = createContext<IApplicationContext | null>(null);
 
-interface IWebTransportProviderProps extends React.PropsWithChildren {}
+interface IApplicationContextProviderProps extends React.PropsWithChildren {}
 
-export const WebTransportProvider = ({
+export const ApplicationContextProvider = ({
   children,
-}: IWebTransportProviderProps) => {
-  const connectionRef = useRef<WebTransport>(null);
+}: IApplicationContextProviderProps) => {
+  const strokeSegmentQueueRef = useRef<Array<TStrokeSegment>>([]);
+  const peerMousePositionRef = useRef<TMousePosition>(null);
 
-  const streamRef = useRef<WebTransportBidirectionalStream>(null);
-  const streamWriterRef = useRef<WritableStreamDefaultWriter>(null);
-  const streamReaderRef = useRef<ReadableStreamDefaultReader>(null);
-
-  const datagramWriterRef = useRef<WritableStreamDefaultWriter>(null);
-  const datagramReaderRef = useRef<ReadableStreamDefaultReader>(null);
-
-  const drawQueueRef = useRef<Array<TStrokeSegment>>([]);
-  const mousePoisitionRef = useRef<TMousePosition>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const authSuccessHandler = (payload: Uint8Array<ArrayBuffer>) => {
-    const value = payload[0];
-    setIsAuthenticated(value === 1 ? true : false);
+  const { initTransport, sendStrokeSegmentUpdate, sendMousePositionUpdate } =
+    useWebTransportConnection({
+      strokeSegmentQueueRef,
+      peerMousePositionRef,
+      setIsAuthenticated,
+    });
+
+  const updateStrokeSegmentQueue = (segment: TStrokeSegment) => {
+    strokeSegmentQueueRef.current.push(segment);
+    sendStrokeSegmentUpdate(segment);
   };
 
-  const strokeSegmentHandler = (payload: Uint8Array<ArrayBuffer>) => {
-    const segment = decodeBytesToStrokeSegment(payload);
-    drawQueueRef.current.push(segment);
+  const updateMousePosition = (position: TMousePosition) => {
+    sendMousePositionUpdate(position);
   };
 
-  const mousePositionHandler = (payload: Uint8Array<ArrayBuffer>) => {
-    const pos = decodeBytesToMousePosition(payload);
-    mousePoisitionRef.current = pos;
-  };
-
-  const messageReceiver = (
-    type: EMessageType,
-    payload: Uint8Array<ArrayBuffer>,
-  ) => {
-    switch (type) {
-      case EMessageType.AUTHENTICATE_SUCCESS:
-        authSuccessHandler(payload);
-        break;
-      case EMessageType.STROKE_SEGMENT:
-        strokeSegmentHandler(payload);
-        break;
-      case EMessageType.MOUSE_POSITION:
-        mousePositionHandler(payload);
-        break;
-    }
-  };
-
-  const authenticateUser = (sessionToken: string) => {
-    messageDispatcher(
-      streamWriterRef.current!,
-      EMessageType.USER_AUTHENTICATE,
-      sessionToken,
-    );
-  };
-
-  const sendStrokeUpdate = (segment: TStrokeSegment) => {
-    messageDispatcher(
-      streamWriterRef.current!,
-      EMessageType.STROKE_SEGMENT,
-      segment,
-    );
-  };
-
-  const sendMouseUpdate = (position: TMousePosition) => {
-    messageDispatcher(
-      datagramWriterRef.current!,
-      EMessageType.MOUSE_POSITION,
-      position,
-    );
-  };
-
-  const getDrawQueue = () => {
-    const queue = drawQueueRef.current;
-    drawQueueRef.current = [];
+  const getStrokeSegmentQueue = () => {
+    const queue = strokeSegmentQueueRef.current;
+    strokeSegmentQueueRef.current = [];
     return queue;
   };
 
-  const getMousePositionUpdate = () => {
-    return mousePoisitionRef.current;
-  };
-
-  const pushToDrawQueue = (segment: TStrokeSegment) => {
-    drawQueueRef.current.push(segment);
-  };
-
-  const initWebTransport = async (sessionToken: string) => {
-    const wt = await createWebTransportConnection();
-    connectionRef.current = wt;
-
-    const stream = await setupWebTransportStream(wt);
-    streamRef.current = stream;
-    streamWriterRef.current = stream.writable.getWriter();
-    streamReaderRef.current = stream.readable.getReader();
-
-    const datagrams = setupWebTransportDatagrams(wt);
-    datagramWriterRef.current = datagrams.writable.getWriter();
-    datagramReaderRef.current = datagrams.readable.getReader();
-
-    authenticateUser(sessionToken);
-
-    readStream(streamReaderRef.current, messageReceiver);
-    readDatagram(datagramReaderRef.current, messageReceiver);
+  const getPeerMousePosition = () => {
+    return peerMousePositionRef.current;
   };
 
   return (
-    <WebTransportContext
+    <ApplicationContext
       value={{
-        connection: connectionRef.current,
-        bidirStream: streamRef.current,
         isAuthenticated,
-        initWebTransport,
-        sendStrokeUpdate,
-        sendMouseUpdate,
-        getDrawQueue,
-        getMousePositionUpdate,
-        pushToDrawQueue,
+        initTransport,
+        updateStrokeSegmentQueue,
+        updateMousePosition,
+        getStrokeSegmentQueue,
+        getPeerMousePosition,
       }}
     >
       {children}
-    </WebTransportContext>
+    </ApplicationContext>
   );
+};
+
+export const useApplicationContext = () => {
+  const ctx = useContext(ApplicationContext) as IApplicationContext;
+  return ctx;
 };

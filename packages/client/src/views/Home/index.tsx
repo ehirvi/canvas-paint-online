@@ -7,15 +7,15 @@ import { useNavigate } from "react-router";
 import { constructCanvasRoute } from "../../routes";
 import { storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
-import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 import { getSessionId } from "../../utils/token";
+import { useApplicationContext } from "../../provider";
 
 export const Home = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string>();
 
-  const { isAuthenticated, initWebTransport } = useWebTransportContext();
+  const { isAuthenticated, initTransport } = useApplicationContext();
 
   useEffect(() => {
     if (isAuthenticated && sessionId) {
@@ -29,7 +29,7 @@ export const Home = () => {
     if (session) {
       const sessionId = getSessionId(session.sessionToken);
       storeSessionToken(session.sessionToken);
-      initWebTransport(session.sessionToken);
+      initTransport(session.sessionToken);
       setSessionId(sessionId);
     }
   };

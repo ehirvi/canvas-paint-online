@@ -5,9 +5,9 @@ import { useParams } from "react-router";
 import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { joinSession } from "../../api/session";
-import { useWebTransportContext } from "../../hooks/useWebTransportContext";
 import type { TStrokeSegment } from "../../protocol";
 import PenSvg from "../../assets/pen.svg";
+import { useApplicationContext } from "../../provider";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -88,12 +88,11 @@ const Canvas = () => {
   const lastPosRef = useRef<[number, number]>(null);
 
   const {
-    sendStrokeUpdate,
-    sendMouseUpdate,
-    getDrawQueue,
-    getMousePositionUpdate,
-    pushToDrawQueue,
-  } = useWebTransportContext();
+    updateStrokeSegmentQueue,
+    updateMousePosition,
+    getStrokeSegmentQueue,
+    getPeerMousePosition,
+  } = useApplicationContext();
 
   const getMousePosition = (ev: MouseEvent): [number, number] => {
     const canvas = paintCanvasRef.current as HTMLCanvasElement;
@@ -105,7 +104,7 @@ const Canvas = () => {
 
   const onMouseMove = (pos: [number, number]) => {
     currentPosRef.current = pos;
-    sendMouseUpdate(pos);
+    updateMousePosition(pos);
 
     if (!isMousePressedDown.current) {
       return;
@@ -123,8 +122,8 @@ const Canvas = () => {
       pos[1],
       pickedColorRef.current,
     ];
-    pushToDrawQueue(payload);
-    sendStrokeUpdate(payload);
+
+    updateStrokeSegmentQueue(payload);
 
     lastPosRef.current = pos;
   };
@@ -150,14 +149,20 @@ const Canvas = () => {
     canvas.addEventListener("mouseup", (ev) => onMouseUp(getMousePosition(ev)));
   };
 
-  const renderStrokes = () => {
-    const queue = getDrawQueue();
-    const mousePos = getMousePositionUpdate();
+  const renderCanvas = () => {
+    const queue = getStrokeSegmentQueue();
+    const peerMousePos = getPeerMousePosition();
 
-    if (mousePos) {
+    if (peerMousePos) {
       const mouseCtx = mouseCtxRef.current as CanvasRenderingContext2D;
       mouseCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      mouseCtx.drawImage(PEN_IMAGE, mousePos[0] - 5, mousePos[1] - 25, 30, 30);
+      mouseCtx.drawImage(
+        PEN_IMAGE,
+        peerMousePos[0] - 5,
+        peerMousePos[1] - 25,
+        30,
+        30,
+      );
     }
 
     const paintCtx = paintCtxRef.current as CanvasRenderingContext2D;
@@ -177,7 +182,7 @@ const Canvas = () => {
       paintCtx.lineTo(pos[2], pos[3]);
       paintCtx.stroke();
     }
-    requestAnimationFrame(renderStrokes);
+    requestAnimationFrame(renderCanvas);
   };
 
   useEffect(() => {
@@ -196,7 +201,7 @@ const Canvas = () => {
       createEventListeners(paintCanvas);
     }
 
-    frameId = requestAnimationFrame(renderStrokes);
+    frameId = requestAnimationFrame(renderCanvas);
 
     return () => {
       cancelAnimationFrame(frameId);
@@ -235,7 +240,7 @@ const Canvas = () => {
 export const CanvasWrapper = () => {
   const { sessionId } = useParams();
   const sessionToken = getSessionToken();
-  const { isAuthenticated, initWebTransport } = useWebTransportContext();
+  const { isAuthenticated, initTransport } = useApplicationContext();
 
   useEffect(() => {
     const onJoin = async () => {
@@ -248,7 +253,7 @@ export const CanvasWrapper = () => {
       const session = await joinSession(sessionId!);
       if (session) {
         storeSessionToken(session.sessionToken);
-        initWebTransport(session.sessionToken);
+        initTransport(session.sessionToken);
       }
     };
 
