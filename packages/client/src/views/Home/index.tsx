@@ -1,10 +1,10 @@
 import { Stack } from "../../components/Stack";
 import { Button } from "../../components/Button";
 import { Heading } from "../../components/Heading";
-import { createSession } from "../../utils/api/session";
+import { createSession } from "../../api/session";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { constructCanvasRoute } from "../../utils/routes";
+import { constructCanvasRoute } from "../../routes";
 import { storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";

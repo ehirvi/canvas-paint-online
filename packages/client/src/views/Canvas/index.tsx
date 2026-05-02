@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { getSessionToken, storeSessionToken } from "../../utils/storage";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
-import { joinSession } from "../../utils/api/session";
+import { joinSession } from "../../api/session";
 import { useWebTransportContext } from "../../hooks/useWebTransportContext";
-import type { TStrokeSegment } from "../../utils/protocol";
+import type { TStrokeSegment } from "../../protocol";
 import PenSvg from "../../assets/pen.svg";
 
 const CANVAS_WIDTH = 1280;

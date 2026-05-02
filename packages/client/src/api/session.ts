@@ -1,4 +1,4 @@
-import { appConfig } from "../config";
+import { appConfig } from "../utils/config";
 import { EApiEndpoint } from "./endpoints";
 import { isSessionResponse } from "./typeguards";
 import type { ISessionResponse } from "./types";

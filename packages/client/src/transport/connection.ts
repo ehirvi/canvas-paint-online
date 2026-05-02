@@ -1,5 +1,5 @@
 import { EApiEndpoint } from "../api/endpoints";
-import { appConfig } from "../config";
+import { appConfig } from "../utils/config";
 
 export const createWebTransportConnection = async (): Promise<WebTransport> => {
   const url = appConfig.API_URL + EApiEndpoint.WEBTRANSPORT;
