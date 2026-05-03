@@ -86,6 +86,8 @@ const Canvas = () => {
 
   const lastPosRef = useRef<[number, number]>(null);
 
+  const frameId = useRef<number>(null);
+
   const {
     updateStrokeSegmentQueue,
     updateMousePosition,
@@ -180,13 +182,13 @@ const Canvas = () => {
       paintCtx.lineTo(pos[2], pos[3]);
       paintCtx.stroke();
     }
-    requestAnimationFrame(renderCanvas);
+
+    frameId.current = requestAnimationFrame(renderCanvas);
   };
 
   useEffect(() => {
     const paintCanvas = paintCanvasRef.current;
     const mouseCanvas = mouseCanvasRef.current;
-    let frameId: number;
 
     if (paintCanvas && mouseCanvas) {
       paintCtxRef.current = paintCanvas.getContext("2d");
@@ -199,10 +201,10 @@ const Canvas = () => {
       createEventListeners(paintCanvas);
     }
 
-    frameId = requestAnimationFrame(renderCanvas);
+    frameId.current = requestAnimationFrame(renderCanvas);
 
     return () => {
-      cancelAnimationFrame(frameId);
+      cancelAnimationFrame(frameId.current!);
     };
   }, []);
 
