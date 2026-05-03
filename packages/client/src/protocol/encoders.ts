@@ -1,4 +1,10 @@
-import type { IMessage, TMousePosition, TStrokeSegment } from ".";
+import {
+  MESSAGE_LENGTH_BYTES,
+  MESSAGE_TYPE_BYTES,
+  type IMessage,
+  type TMousePosition,
+  type TStrokeSegment,
+} from ".";
 
 export const encodeStringToBytes = (
   message: string,
@@ -42,7 +48,9 @@ export const encodeProtocolMessage = (
   message: IMessage,
 ): Uint8Array<ArrayBuffer> => {
   const { length, type, payload } = message;
-  const buffer = new ArrayBuffer(1 + 4 + length);
+  const buffer = new ArrayBuffer(
+    MESSAGE_TYPE_BYTES + MESSAGE_LENGTH_BYTES + length,
+  );
   const view = new DataView(buffer);
 
   view.setUint8(0, type);

@@ -16,18 +16,15 @@ export type TMessagePayload = {
   [EMessageType.MOUSE_POSITION]: TMousePosition;
 };
 
+export const MESSAGE_TYPE_BYTES = 1;
+export const MESSAGE_LENGTH_BYTES = 4;
+
 export interface IMessage {
-  /**
-   * 1 byte
-   */
   type: EMessageType;
   /**
-   * 4 bytes
+   * Length of payload bytes
    */
   length: number;
-  /**
-   * Variable size
-   */
   payload: Uint8Array;
 }
 
