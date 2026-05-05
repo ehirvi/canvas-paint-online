@@ -1,4 +1,9 @@
-import { isValidMessageType, type EMessageType } from "../protocol";
+import {
+  isValidMessageType,
+  MESSAGE_LENGTH_BYTE_SIZE,
+  MESSAGE_TYPE_BYTE_SIZE,
+  type EMessageType,
+} from "../protocol";
 import { decodeProtocolMessage } from "../protocol/decoders";
 
 export const readStream = async (
@@ -11,11 +16,19 @@ export const readStream = async (
   let buffer = new Uint8Array(0);
   try {
     while (true) {
-      const typeBuf = await decodeProtocolMessage(reader, buffer, 1);
+      const typeBuf = await decodeProtocolMessage(
+        reader,
+        buffer,
+        MESSAGE_TYPE_BYTE_SIZE,
+      );
 
       if (!typeBuf) return;
 
-      const lenBuf = await decodeProtocolMessage(reader, typeBuf.buffer, 4);
+      const lenBuf = await decodeProtocolMessage(
+        reader,
+        typeBuf.buffer,
+        MESSAGE_LENGTH_BYTE_SIZE,
+      );
 
       if (!lenBuf) return;
 
