@@ -15,10 +15,10 @@ export const decodeBytesToStrokeSegment = (
 ): TStrokeSegment => {
   const view = new DataView(bytes.buffer);
 
-  const lastPosX = view.getUint32(COORDINATE_BYTE_SIZE * 0);
-  const lastPosY = view.getUint32(COORDINATE_BYTE_SIZE * 1);
-  const posX = view.getUint32(COORDINATE_BYTE_SIZE * 2);
-  const posY = view.getUint32(COORDINATE_BYTE_SIZE * 3);
+  const lastPosX = view.getUint16(COORDINATE_BYTE_SIZE * 0);
+  const lastPosY = view.getUint16(COORDINATE_BYTE_SIZE * 1);
+  const posX = view.getUint16(COORDINATE_BYTE_SIZE * 2);
+  const posY = view.getUint16(COORDINATE_BYTE_SIZE * 3);
 
   const color = decodeBytesToString(bytes.slice(COORDINATE_BYTE_SIZE * 4));
 
@@ -30,8 +30,8 @@ export const decodeBytesToMousePosition = (
 ): TMousePosition => {
   const view = new DataView(bytes.buffer);
 
-  const posX = view.getUint32(COORDINATE_BYTE_SIZE * 0);
-  const posY = view.getUint32(COORDINATE_BYTE_SIZE * 1);
+  const posX = view.getUint16(COORDINATE_BYTE_SIZE * 0);
+  const posY = view.getUint16(COORDINATE_BYTE_SIZE * 1);
 
   return [posX, posY];
 };

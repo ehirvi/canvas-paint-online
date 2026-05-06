@@ -25,10 +25,10 @@ export const encodeStrokeSegmentToBytes = (
   const buffer = new ArrayBuffer(COORDINATE_BYTE_SIZE * 4 + color.length);
   const view = new DataView(buffer);
 
-  view.setUint32(COORDINATE_BYTE_SIZE * 0, segment[0]);
-  view.setUint32(COORDINATE_BYTE_SIZE * 1, segment[1]);
-  view.setUint32(COORDINATE_BYTE_SIZE * 2, segment[2]);
-  view.setUint32(COORDINATE_BYTE_SIZE * 3, segment[3]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 0, segment[0]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 1, segment[1]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 2, segment[2]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 3, segment[3]);
 
   const bytes = new Uint8Array(buffer);
   bytes.set(color, COORDINATE_BYTE_SIZE * 4);
@@ -41,8 +41,8 @@ export const encodeMousePositionToBytes = (
   const buffer = new ArrayBuffer(COORDINATE_BYTE_SIZE * 2);
   const view = new DataView(buffer);
 
-  view.setUint32(COORDINATE_BYTE_SIZE * 0, position[0]);
-  view.setUint32(COORDINATE_BYTE_SIZE * 1, position[1]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 0, position[0]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 1, position[1]);
 
   const bytes = new Uint8Array(buffer);
   return bytes;
@@ -58,7 +58,7 @@ export const encodeProtocolMessage = (
   const view = new DataView(buffer);
 
   view.setUint8(MESSAGE_TYPE_BYTE_OFFSET, type);
-  view.setUint32(MESSAGE_LENGTH_BYTE_OFFSET, length);
+  view.setUint16(MESSAGE_LENGTH_BYTE_OFFSET, length);
 
   const protocolMsg = new Uint8Array(buffer);
   protocolMsg.set(payload, MESSAGE_PAYLOAD_BYTE_OFFSET);

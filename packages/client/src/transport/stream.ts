@@ -32,7 +32,7 @@ export const readStream = async (
 
       if (!lenBuf) return;
 
-      const length = new DataView(lenBuf.out.buffer).getUint32(0);
+      const length = new DataView(lenBuf.out.buffer).getUint16(0);
 
       const payloadBuf = await decodeProtocolMessage(
         reader,
