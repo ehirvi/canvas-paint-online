@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
+	"runtime"
 
 	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/routes"
@@ -13,6 +15,17 @@ import (
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
 )
+
+func getTSLCertAndKey() (string, string) {
+	_, filename, _, _ := runtime.Caller(0)
+
+	root := filepath.Join(filepath.Dir(filename), "..", "..", "..", "..")
+
+	certPath := filepath.Join(root, "localhost.pem")
+	keyPath := filepath.Join(root, "localhost-key.pem")
+
+	return certPath, keyPath
+}
 
 func createHttp3Server() (*http3.Server, *http.ServeMux) {
 	mux := http.NewServeMux()
@@ -55,8 +68,7 @@ func serveWebTransportServer(wt *webtransport.Server, certFile string, keyFile s
 }
 
 func InitializeServer(app *application.Application) {
-	cert := "localhost.pem"
-	key := "localhost-key.pem"
+	cert, key := getTSLCertAndKey()
 
 	h3, mux := createHttp3Server()
 	wt := createWebTransportServer(h3)
