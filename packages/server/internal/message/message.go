@@ -19,17 +19,27 @@ const (
 
 type Message struct {
 	Type    MessageType
-	Length  uint32
+	Length  uint16
 	Payload []byte
 }
 
+const (
+	CoordinateByteSize    = 2
+	MessageTypeByteSize   = 1
+	MessageLengthByteSize = 2
+
+	MessageTypeByteOffset    = 0
+	MessageLengthByteOffset  = 1
+	MessagePayloadByteOffset = 3
+)
+
 func EncodeMessage(msg Message) []byte {
-	bufLen := 1 + 4 + msg.Length
+	bufLen := MessageTypeByteSize + MessageLengthByteSize + msg.Length
 	buf := make([]byte, bufLen)
 
 	buf[0] = byte(msg.Type)
-	binary.BigEndian.PutUint32(buf[1:5], msg.Length)
-	copy(buf[5:], msg.Payload)
+	binary.BigEndian.PutUint16(buf[MessageLengthByteOffset:MessagePayloadByteOffset], msg.Length)
+	copy(buf[MessagePayloadByteOffset:], msg.Payload)
 
 	return buf
 }
@@ -37,19 +47,19 @@ func EncodeMessage(msg Message) []byte {
 func DecodeMessage(stream *webtransport.Stream) (*Message, error) {
 	msg := &Message{}
 
-	typeBuf := make([]byte, 1)
+	typeBuf := make([]byte, MessageTypeByteSize)
 	_, typeErr := io.ReadFull(stream, typeBuf[:])
 	if typeErr != nil {
 		return nil, typeErr
 	}
 	msgType := typeBuf[0]
 
-	lenBuf := make([]byte, 4)
+	lenBuf := make([]byte, MessageLengthByteSize)
 	_, lenErr := io.ReadFull(stream, lenBuf[:])
 	if lenErr != nil {
 		return nil, lenErr
 	}
-	msgLength := binary.BigEndian.Uint32(lenBuf[:])
+	msgLength := binary.BigEndian.Uint16(lenBuf[:])
 
 	payloadBuf := make([]byte, msgLength)
 	_, payloadErr := io.ReadFull(stream, payloadBuf)
@@ -71,17 +81,17 @@ func DecodeDatagram(payload []byte) (*Message, error) {
 	}
 
 	msg := &Message{}
-	msg.Type = MessageType(payload[0])
-	msg.Length = binary.BigEndian.Uint32(payload[1:5])
-	msg.Payload = payload[5:]
+	msg.Type = MessageType(payload[MessageTypeByteOffset])
+	msg.Length = binary.BigEndian.Uint16(payload[MessageLengthByteOffset:MessagePayloadByteOffset])
+	msg.Payload = payload[MessagePayloadByteOffset:]
 	return msg, nil
 }
 
-func decodeStrokePosition(payload []byte) (uint32, uint32, uint32, uint32) {
-	lastPosX := binary.BigEndian.Uint32(payload[:4])
-	lastPosY := binary.BigEndian.Uint32(payload[4:8])
-	posX := binary.BigEndian.Uint32(payload[8:12])
-	posY := binary.BigEndian.Uint32(payload[12:])
+func decodeStrokePosition(payload []byte) (uint16, uint16, uint16, uint16) {
+	lastPosX := binary.BigEndian.Uint16(payload[:CoordinateByteSize])
+	lastPosY := binary.BigEndian.Uint16(payload[CoordinateByteSize : CoordinateByteSize*2])
+	posX := binary.BigEndian.Uint16(payload[CoordinateByteSize*2 : CoordinateByteSize*3])
+	posY := binary.BigEndian.Uint16(payload[CoordinateByteSize*3:])
 
 	return lastPosX, lastPosY, posX, posY
 }
