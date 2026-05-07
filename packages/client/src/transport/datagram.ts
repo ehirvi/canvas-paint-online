@@ -1,4 +1,9 @@
-import { EMessageType, isValidMessageType } from "../protocol";
+import {
+  EMessageType,
+  isValidMessageType,
+  MESSAGE_PAYLOAD_BYTE_OFFSET,
+  MESSAGE_TYPE_BYTE_OFFSET,
+} from "../protocol";
 
 export const readDatagram = async (
   reader: ReadableStreamDefaultReader,
@@ -14,8 +19,8 @@ export const readDatagram = async (
         break;
       }
       const datagram = value as Uint8Array;
-      const type = datagram[0];
-      const payload = datagram.slice(5);
+      const type = datagram[MESSAGE_TYPE_BYTE_OFFSET];
+      const payload = datagram.slice(MESSAGE_PAYLOAD_BYTE_OFFSET);
 
       if (isValidMessageType(type)) {
         messageReceiver(type, payload);

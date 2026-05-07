@@ -1,4 +1,8 @@
-import type { TMousePosition, TStrokeSegment } from ".";
+import {
+  COORDINATE_BYTE_SIZE,
+  type TMousePosition,
+  type TStrokeSegment,
+} from ".";
 
 const decodeBytesToString = (bytes: Uint8Array<ArrayBuffer>): string => {
   const decoder = new TextDecoder();
@@ -11,12 +15,12 @@ export const decodeBytesToStrokeSegment = (
 ): TStrokeSegment => {
   const view = new DataView(bytes.buffer);
 
-  const lastPosX = view.getUint32(0);
-  const lastPosY = view.getUint32(4);
-  const posX = view.getUint32(8);
-  const posY = view.getUint32(12);
+  const lastPosX = view.getUint16(COORDINATE_BYTE_SIZE * 0);
+  const lastPosY = view.getUint16(COORDINATE_BYTE_SIZE * 1);
+  const posX = view.getUint16(COORDINATE_BYTE_SIZE * 2);
+  const posY = view.getUint16(COORDINATE_BYTE_SIZE * 3);
 
-  const color = decodeBytesToString(bytes.slice(16));
+  const color = decodeBytesToString(bytes.slice(COORDINATE_BYTE_SIZE * 4));
 
   return [lastPosX, lastPosY, posX, posY, color];
 };
@@ -26,8 +30,8 @@ export const decodeBytesToMousePosition = (
 ): TMousePosition => {
   const view = new DataView(bytes.buffer);
 
-  const posX = view.getUint32(0);
-  const posY = view.getUint32(4);
+  const posX = view.getUint16(COORDINATE_BYTE_SIZE * 0);
+  const posY = view.getUint16(COORDINATE_BYTE_SIZE * 1);
 
   return [posX, posY];
 };

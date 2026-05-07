@@ -1,6 +1,10 @@
 import {
-  MESSAGE_LENGTH_BYTES,
-  MESSAGE_TYPE_BYTES,
+  COORDINATE_BYTE_SIZE,
+  MESSAGE_LENGTH_BYTE_OFFSET,
+  MESSAGE_LENGTH_BYTE_SIZE,
+  MESSAGE_PAYLOAD_BYTE_OFFSET,
+  MESSAGE_TYPE_BYTE_OFFSET,
+  MESSAGE_TYPE_BYTE_SIZE,
   type IMessage,
   type TMousePosition,
   type TStrokeSegment,
@@ -18,27 +22,27 @@ export const encodeStrokeSegmentToBytes = (
   segment: TStrokeSegment,
 ): Uint8Array<ArrayBuffer> => {
   const color = encodeStringToBytes(segment[4]);
-  const buffer = new ArrayBuffer(16 + color.length);
+  const buffer = new ArrayBuffer(COORDINATE_BYTE_SIZE * 4 + color.length);
   const view = new DataView(buffer);
 
-  view.setUint32(0, segment[0]);
-  view.setUint32(4, segment[1]);
-  view.setUint32(8, segment[2]);
-  view.setUint32(12, segment[3]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 0, segment[0]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 1, segment[1]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 2, segment[2]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 3, segment[3]);
 
   const bytes = new Uint8Array(buffer);
-  bytes.set(color, 16);
+  bytes.set(color, COORDINATE_BYTE_SIZE * 4);
   return bytes;
 };
 
 export const encodeMousePositionToBytes = (
   position: TMousePosition,
 ): Uint8Array<ArrayBuffer> => {
-  const buffer = new ArrayBuffer(8);
+  const buffer = new ArrayBuffer(COORDINATE_BYTE_SIZE * 2);
   const view = new DataView(buffer);
 
-  view.setUint32(0, position[0]);
-  view.setUint32(4, position[1]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 0, position[0]);
+  view.setUint16(COORDINATE_BYTE_SIZE * 1, position[1]);
 
   const bytes = new Uint8Array(buffer);
   return bytes;
@@ -49,15 +53,15 @@ export const encodeProtocolMessage = (
 ): Uint8Array<ArrayBuffer> => {
   const { length, type, payload } = message;
   const buffer = new ArrayBuffer(
-    MESSAGE_TYPE_BYTES + MESSAGE_LENGTH_BYTES + length,
+    MESSAGE_TYPE_BYTE_SIZE + MESSAGE_LENGTH_BYTE_SIZE + length,
   );
   const view = new DataView(buffer);
 
-  view.setUint8(0, type);
-  view.setUint32(1, length);
+  view.setUint8(MESSAGE_TYPE_BYTE_OFFSET, type);
+  view.setUint16(MESSAGE_LENGTH_BYTE_OFFSET, length);
 
   const protocolMsg = new Uint8Array(buffer);
-  protocolMsg.set(payload, 5);
+  protocolMsg.set(payload, MESSAGE_PAYLOAD_BYTE_OFFSET);
 
   return protocolMsg;
 };
