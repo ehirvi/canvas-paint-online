@@ -2,7 +2,6 @@ package transport
 
 import (
 	"fmt"
-	"log"
 	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/message"
 	"online-canvas-paint-server/internal/token"
@@ -31,31 +30,28 @@ func (t *TransportContext) handleUserAuthenticate(app *application.Application, 
 	DispatchAuthSuccessMsg(user, true)
 }
 
-func (t *TransportContext) handleStrokeSegmentUpdate(msg message.Message) {
-	err := msg.ValidateStrokeSegment()
-	if err != nil {
-		log.Println(err)
-	}
+func (t *TransportContext) handleStrokeSegmentUpdate(bytes []byte) {
+
 	var peer *user.User
 	for id, user := range t.CanvasSession.Users {
 		if id != t.UserID {
 			peer = user
 		}
 	}
-	DispatchStrokeSegmentMsg(peer, msg.Payload)
+	DispatchStrokeSegmentMsg(peer, bytes)
 }
 
-func (t *TransportContext) handleMousePosition(msg message.Message) {
+func (t *TransportContext) handleMousePosition(bytes []byte) {
 	var peer *user.User
 	for id, user := range t.CanvasSession.Users {
 		if id != t.UserID {
 			peer = user
 		}
 	}
-	DispatchMousePositionMsg(peer, msg.Payload)
+	DispatchMousePositionMsg(peer, bytes)
 }
 
-func (t *TransportContext) ReceiveMessage(app *application.Application, msg *message.Message) {
+func (t *TransportContext) ReceiveMessage(app *application.Application, msg *message.Message, bytes []byte) {
 	if msg == nil {
 		return
 	}
@@ -64,8 +60,8 @@ func (t *TransportContext) ReceiveMessage(app *application.Application, msg *mes
 	case message.UserAuthenticate:
 		t.handleUserAuthenticate(app, *msg)
 	case message.StrokeSegment:
-		t.handleStrokeSegmentUpdate(*msg)
+		t.handleStrokeSegmentUpdate(bytes)
 	case message.MousePosition:
-		t.handleMousePosition(*msg)
+		t.handleMousePosition(bytes)
 	}
 }

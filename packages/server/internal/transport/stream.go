@@ -7,16 +7,15 @@ import (
 	"github.com/quic-go/webtransport-go"
 )
 
-func (t *TransportContext) readStream() (*message.Message, error) {
-	msg, err := message.DecodeMessage(t.WebTransportStream)
+func (t *TransportContext) readStream() (*message.Message, []byte, error) {
+	msg, bytes, err := message.DecodeMessage(t.WebTransportStream)
 	if err != nil {
-		return nil, err
+		return nil, []byte{}, err
 	}
-	return msg, nil
+	return msg, bytes, nil
 }
 
-func WriteStream(s *webtransport.Stream, payload message.Message) {
-	bytes := message.EncodeMessage(payload)
+func WriteStream(s *webtransport.Stream, bytes []byte) {
 	s.Write(bytes)
 }
 
@@ -31,11 +30,11 @@ func (t *TransportContext) handleStream(app *application.Application) {
 	defer stream.Close()
 
 	for {
-		msg, err := t.readStream()
+		msg, bytes, err := t.readStream()
 		if err != nil {
 			sess.CloseWithError(400, "Session closed")
 			return
 		}
-		t.ReceiveMessage(app, msg)
+		t.ReceiveMessage(app, msg, bytes)
 	}
 }

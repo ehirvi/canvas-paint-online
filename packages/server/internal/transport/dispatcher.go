@@ -17,21 +17,20 @@ func DispatchAuthSuccessMsg(user *user.User, success bool) {
 	}
 
 	msg := message.Message{Type: message.AuthenticateSuccess, Length: 1, Payload: []byte{payload}}
-	WriteStream(user.Stream, msg)
+	bytes := message.EncodeMessage(msg)
+	WriteStream(user.Stream, bytes)
 }
 
-func DispatchStrokeSegmentMsg(user *user.User, payload []byte) {
+func DispatchStrokeSegmentMsg(user *user.User, bytes []byte) {
 	if user == nil {
 		return
 	}
-	msg := message.Message{Type: message.StrokeSegment, Length: uint32(len(payload)), Payload: payload}
-	WriteStream(user.Stream, msg)
+	WriteStream(user.Stream, bytes)
 }
 
-func DispatchMousePositionMsg(user *user.User, payload []byte) {
+func DispatchMousePositionMsg(user *user.User, bytes []byte) {
 	if user == nil {
 		return
 	}
-	msg := message.Message{Type: message.MousePosition, Length: uint32(len(payload)), Payload: payload}
-	WriteDatagram(user.Session, msg)
+	WriteDatagram(user.Session, bytes)
 }
