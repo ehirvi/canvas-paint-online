@@ -34,47 +34,43 @@ func EncodeMessage(msg Message) []byte {
 	return buf
 }
 
-func DecodeMessage(stream *webtransport.Stream) (*Message, error) {
-	msg := &Message{}
+func DecodeMessage(stream *webtransport.Stream) (*Message, []byte, error) {
+	header := make([]byte, 5)
 
-	typeBuf := make([]byte, 1)
-	_, typeErr := io.ReadFull(stream, typeBuf[:])
-	if typeErr != nil {
-		return nil, typeErr
+	_, err := io.ReadFull(stream, header)
+	if err != nil {
+		return nil, []byte{}, err
 	}
-	msgType := typeBuf[0]
+	msgType := header[0]
+	msgLength := binary.BigEndian.Uint32(header[1:5])
 
-	lenBuf := make([]byte, 4)
-	_, lenErr := io.ReadFull(stream, lenBuf[:])
-	if lenErr != nil {
-		return nil, lenErr
+	frame := make([]byte, 5+msgLength)
+	_, err = io.ReadFull(stream, frame[5:])
+	if err != nil {
+		return nil, []byte{}, err
 	}
-	msgLength := binary.BigEndian.Uint32(lenBuf[:])
+	msgPayload := frame[5:]
+	copy(frame[:5], header)
 
-	payloadBuf := make([]byte, msgLength)
-	_, payloadErr := io.ReadFull(stream, payloadBuf)
-	if payloadErr != nil {
-		return nil, payloadErr
-	}
-	msgPayload := payloadBuf[:]
-
-	msg.Type = MessageType(msgType)
-	msg.Length = msgLength
-	msg.Payload = msgPayload
-
-	return msg, nil
+	return &Message{
+			Type:    MessageType(msgType),
+			Length:  msgLength,
+			Payload: msgPayload,
+		},
+		frame,
+		nil
 }
 
-func DecodeDatagram(payload []byte) (*Message, error) {
+func DecodeDatagram(payload []byte) *Message {
 	if len(payload) == 0 {
-		return nil, nil
+		return nil
 	}
 
-	msg := &Message{}
-	msg.Type = MessageType(payload[0])
-	msg.Length = binary.BigEndian.Uint32(payload[1:5])
-	msg.Payload = payload[5:]
-	return msg, nil
+	return &Message{
+		Type:    MessageType(payload[0]),
+		Length:  binary.BigEndian.Uint32(payload[1:5]),
+		Payload: payload[5:],
+	}
 }
 
 func decodeStrokePosition(payload []byte) (uint32, uint32, uint32, uint32) {
