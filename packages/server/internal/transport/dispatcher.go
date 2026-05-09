@@ -5,32 +5,43 @@ import (
 	"online-canvas-paint-server/internal/user"
 )
 
-func DispatchAuthSuccessMsg(user *user.User, success bool) {
+func (t *TransportContext) getPeer() *user.User {
+	var peer *user.User
+	for id, user := range t.CanvasSession.Users {
+		if id != t.UserID {
+			peer = user
+		}
+	}
+	return peer
+}
+
+func (t *TransportContext) DispatchDatagramToPeer(bytes []byte) {
+	peer := t.getPeer()
+	if peer == nil {
+		return
+	}
+	WriteDatagram(peer.Session, bytes)
+}
+
+func (t *TransportContext) DispatchToPeerStream(bytes []byte) {
+	peer := t.getPeer()
+	if peer == nil {
+		return
+	}
+	WriteToStream(peer.Stream, bytes)
+
+}
+
+func (t *TransportContext) DispatchToUserStream(bytes []byte) {
+	WriteToStream(t.WebTransportStream, bytes)
+}
+
+func (t *TransportContext) DispatchAuthSuccessMsg(user *user.User) {
 	if user == nil {
 		return
 	}
-	var payload byte
-	if success {
-		payload = 1
-	} else {
-		payload = 0
-	}
 
-	msg := message.Message{Type: message.AuthenticateSuccess, Length: 1, Payload: []byte{payload}}
+	msg := message.Message{Type: message.AuthenticateSuccess, Length: 1, Payload: []byte{1}}
 	bytes := message.EncodeMessage(msg)
-	WriteStream(user.Stream, bytes)
-}
-
-func DispatchStrokeSegmentMsg(user *user.User, bytes []byte) {
-	if user == nil {
-		return
-	}
-	WriteStream(user.Stream, bytes)
-}
-
-func DispatchMousePositionMsg(user *user.User, bytes []byte) {
-	if user == nil {
-		return
-	}
-	WriteDatagram(user.Session, bytes)
+	t.DispatchToUserStream(bytes)
 }

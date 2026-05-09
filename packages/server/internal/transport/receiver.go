@@ -5,7 +5,6 @@ import (
 	"online-canvas-paint-server/internal/application"
 	"online-canvas-paint-server/internal/message"
 	"online-canvas-paint-server/internal/token"
-	"online-canvas-paint-server/internal/user"
 
 	"github.com/google/uuid"
 )
@@ -27,28 +26,15 @@ func (t *TransportContext) handleUserAuthenticate(app *application.Application, 
 	sess := app.SessionManager.GetSession(sessionID)
 	t.CanvasSession = sess
 
-	DispatchAuthSuccessMsg(user, true)
+	t.DispatchAuthSuccessMsg(user)
 }
 
 func (t *TransportContext) handleStrokeSegmentUpdate(bytes []byte) {
-
-	var peer *user.User
-	for id, user := range t.CanvasSession.Users {
-		if id != t.UserID {
-			peer = user
-		}
-	}
-	DispatchStrokeSegmentMsg(peer, bytes)
+	t.DispatchToPeerStream(bytes)
 }
 
 func (t *TransportContext) handleMousePosition(bytes []byte) {
-	var peer *user.User
-	for id, user := range t.CanvasSession.Users {
-		if id != t.UserID {
-			peer = user
-		}
-	}
-	DispatchMousePositionMsg(peer, bytes)
+	t.DispatchDatagramToPeer(bytes)
 }
 
 func (t *TransportContext) ReceiveMessage(app *application.Application, msg *message.Message, bytes []byte) {

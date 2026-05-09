@@ -14,16 +14,16 @@ func (t *TransportContext) readDatagram(ctx context.Context) (*message.Message, 
 		return nil, []byte{}, err
 	}
 
-	msg, err := message.DecodeDatagram(bytes)
-	if err != nil {
-		return nil, []byte{}, err
-	}
+	msg := message.DecodeDatagram(bytes)
 
 	return msg, bytes, nil
 }
 
-func WriteDatagram(s *webtransport.Session, bytes []byte) {
-	s.SendDatagram(bytes)
+func WriteDatagram(session *webtransport.Session, bytes []byte) {
+	if session == nil {
+		return
+	}
+	session.SendDatagram(bytes)
 }
 
 func (t *TransportContext) handleDatagrams(app *application.Application) {

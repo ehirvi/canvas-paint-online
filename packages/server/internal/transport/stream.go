@@ -15,8 +15,11 @@ func (t *TransportContext) readStream() (*message.Message, []byte, error) {
 	return msg, bytes, nil
 }
 
-func WriteStream(s *webtransport.Stream, bytes []byte) {
-	s.Write(bytes)
+func WriteToStream(stream *webtransport.Stream, bytes []byte) {
+	if stream == nil {
+		return
+	}
+	stream.Write(bytes)
 }
 
 func (t *TransportContext) handleStream(app *application.Application) {

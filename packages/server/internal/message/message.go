@@ -61,16 +61,16 @@ func DecodeMessage(stream *webtransport.Stream) (*Message, []byte, error) {
 		nil
 }
 
-func DecodeDatagram(payload []byte) (*Message, error) {
+func DecodeDatagram(payload []byte) *Message {
 	if len(payload) == 0 {
-		return nil, nil
+		return nil
 	}
 
-	msg := &Message{}
-	msg.Type = MessageType(payload[0])
-	msg.Length = binary.BigEndian.Uint32(payload[1:5])
-	msg.Payload = payload[5:]
-	return msg, nil
+	return &Message{
+		Type:    MessageType(payload[0]),
+		Length:  binary.BigEndian.Uint32(payload[1:5]),
+		Payload: payload[5:],
+	}
 }
 
 func decodeStrokePosition(payload []byte) (uint32, uint32, uint32, uint32) {
