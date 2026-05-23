@@ -3,5 +3,5 @@ interface IAppConfig {
 }
 
 export const appConfig: IAppConfig = {
-  API_URL: "https://localhost:8443",
+  API_URL: "https://localhost:443",
 };
