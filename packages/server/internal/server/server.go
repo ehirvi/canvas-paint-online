@@ -29,7 +29,7 @@ func getTSLCertAndKey() (string, string) {
 
 func createHttp3Server() (*http3.Server, *http.ServeMux) {
 	mux := http.NewServeMux()
-	h3 := &http3.Server{Handler: mux, Addr: ":8443", TLSConfig: http3.ConfigureTLSConfig(&tls.Config{})}
+	h3 := &http3.Server{Handler: mux, Addr: ":443", TLSConfig: http3.ConfigureTLSConfig(&tls.Config{})}
 	return h3, mux
 }
 
@@ -45,6 +45,7 @@ func createHttpRoutes(app *application.Application, mux *http.ServeMux) {
 		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			CorsHandler(w, r)
+			w.Header().Set("Alt-Svc", "h3=\":443\"; ma=2592000")
 			route.Handler(app, w, r)
 		})
 	}
