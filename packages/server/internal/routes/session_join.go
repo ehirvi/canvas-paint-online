@@ -2,10 +2,10 @@ package routes
 
 import (
 	"net/http"
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/token"
-	"online-canvas-paint-server/internal/user"
-	"online-canvas-paint-server/pkg/protocol"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/token"
+	"canvas-paint-webtransport-server/internal/user"
+	"canvas-paint-webtransport-server/pkg/protocol"
 
 	"github.com/google/uuid"
 )

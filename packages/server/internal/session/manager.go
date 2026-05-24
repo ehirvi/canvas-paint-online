@@ -1,8 +1,8 @@
 package session
 
 import (
-	"online-canvas-paint-server/internal/common"
-	"online-canvas-paint-server/internal/user"
+	"canvas-paint-webtransport-server/internal/common"
+	"canvas-paint-webtransport-server/internal/user"
 	"sync"
 
 	"github.com/google/uuid"

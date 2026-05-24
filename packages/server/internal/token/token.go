@@ -2,8 +2,8 @@ package token
 
 import (
 	"fmt"
-	"online-canvas-paint-server/internal/common"
-	"online-canvas-paint-server/internal/user"
+	"canvas-paint-webtransport-server/internal/common"
+	"canvas-paint-webtransport-server/internal/user"
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"

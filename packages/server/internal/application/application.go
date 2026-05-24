@@ -1,8 +1,8 @@
 package application
 
 import (
-	"online-canvas-paint-server/internal/session"
-	"online-canvas-paint-server/internal/user"
+	"canvas-paint-webtransport-server/internal/session"
+	"canvas-paint-webtransport-server/internal/user"
 )
 
 type Application struct {

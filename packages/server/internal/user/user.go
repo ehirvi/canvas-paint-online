@@ -1,7 +1,7 @@
 package user
 
 import (
-	"online-canvas-paint-server/internal/common"
+	"canvas-paint-webtransport-server/internal/common"
 	"sync"
 
 	"github.com/google/uuid"
