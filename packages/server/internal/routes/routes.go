@@ -2,7 +2,7 @@ package routes
 
 import (
 	"net/http"
-	"online-canvas-paint-server/internal/application"
+	"canvas-paint-webtransport-server/internal/application"
 )
 
 type HttpMethod string

@@ -1,4 +1,4 @@
-module online-canvas-paint-server
+module canvas-paint-webtransport-server
 
 go 1.25.6
 

@@ -1,8 +1,8 @@
 package transport
 
 import (
-	"online-canvas-paint-server/internal/message"
-	"online-canvas-paint-server/internal/user"
+	"canvas-paint-webtransport-server/internal/message"
+	"canvas-paint-webtransport-server/internal/user"
 )
 
 func (t *TransportContext) getPeer() *user.User {

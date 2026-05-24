@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/routes"
-	"online-canvas-paint-server/internal/transport"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/routes"
+	"canvas-paint-webtransport-server/internal/transport"
 
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"

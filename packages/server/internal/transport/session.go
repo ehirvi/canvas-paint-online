@@ -3,9 +3,9 @@ package transport
 import (
 	"net/http"
 
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/common"
-	"online-canvas-paint-server/internal/session"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/common"
+	"canvas-paint-webtransport-server/internal/session"
 
 	"github.com/quic-go/webtransport-go"
 )

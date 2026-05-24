@@ -2,9 +2,9 @@ package transport
 
 import (
 	"fmt"
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/message"
-	"online-canvas-paint-server/internal/token"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/message"
+	"canvas-paint-webtransport-server/internal/token"
 
 	"github.com/google/uuid"
 )

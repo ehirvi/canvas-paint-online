@@ -1,8 +1,8 @@
 package main
 
 import (
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/server"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/server"
 
 	"github.com/joho/godotenv"
 )

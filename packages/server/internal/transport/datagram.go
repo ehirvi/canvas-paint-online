@@ -2,8 +2,8 @@ package transport
 
 import (
 	"context"
-	"online-canvas-paint-server/internal/application"
-	"online-canvas-paint-server/internal/message"
+	"canvas-paint-webtransport-server/internal/application"
+	"canvas-paint-webtransport-server/internal/message"
 
 	"github.com/quic-go/webtransport-go"
 )

@@ -3,7 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
-	"online-canvas-paint-server/internal/application"
+	"canvas-paint-webtransport-server/internal/application"
 )
 
 var Health = Route{
